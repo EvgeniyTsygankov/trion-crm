@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Панель управления сервисом</h2>
+    <div>
+      <a href="{% url 'order_create' %}" class="btn btn-primary me-2">
+        <i class="fas fa-plus"></i> Создать заказ
+      </a>
+      <a href="{% url 'client_create' %}" class="btn btn-outline-primary">
+        <i class="fas fa-user-plus"></i> Добавить клиента
+      </a>
+    </div>
+  </div>
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-primary h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ total_orders }}</h5>
+          <p class="card-text">Всего заказов</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-success h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ total_clients }}</h5>
+          <p class="card-text">Всего клиентов</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-info h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ active_orders_count }}</h5>
+          <p class="card-text">Заказов в работе</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card text-white bg-danger h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ total_duty }} ₽</h5>
+          <p class="card-text">Общий баланс по заказам</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Последние заказы</h5>
+      <a href="{% url 'order_list' %}" class="btn btn-sm btn-outline-secondary">
+        Все заказы
+      </a>
+    </div>
+    <div class="card-body">
+      {% if recent_orders %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Номер</th>
+                <th>Дата</th>
+                <th>Клиент</th>
+                <th>Оборудование</th>
+                <th>Детали заказа</th>
+                <th>Статус</th>
+                <th>Сумма</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+                <tr>
+                  <td>
+                    <a href="{% url 'order_detail' order.pk %}">
+                      {{ order.code }}
+                    </a>
+                  </td>
+                  <td>{{ order.create|date:"d.m.Y" }}</td>
+                  <td>{{ order.client.client_name }}</td>
+                  <td>{{ order.accepted_equipment }}</td>
+                  <td>{{ order.detail }}</td>
+                  <td>{{ order.get_status_display }}</td>
+                  <td>{{ order.total_price }} ₽</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Заказов пока нет.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Заказы</h6>
+          <p class="card-text text-muted">Просмотр и управление заказами</p>
+          <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm">Перейти</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Клиенты</h6>
+          <p class="card-text text-muted">Просмотр и управление клиентами</p>
+          <a href="{% url 'client_list' %}" class="btn btn-outline-primary btn-sm">Перейти</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Услуги</h6>
+          <p class="card-text text-muted">Справочник услуг и цен</p>
+          <a href="{% url 'service_list' %}" class="btn btn-outline-primary btn-sm">Перейти</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title">Покупки</h6>
+          <p class="card-text text-muted">Закупки запчастей по заказам</p>
+          <a href="{% url 'purchase_list' %}" class="btn btn-outline-primary btn-sm">Перейти</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

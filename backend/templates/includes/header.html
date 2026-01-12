@@ -1,0 +1,64 @@
+{% load static %}
+{% with request.resolver_match.url_name as view_name %}
+<aside class="ts-sidebar">
+  <div class="ts-sidebar__brand">
+    <a href="{% url 'home' %}" class="ts-sidebar__brand-link">
+      TriON CRM
+    </a>
+  </div>
+  <nav class="ts-sidebar__nav">
+    <ul>
+      <li>
+        <a href="{% url 'order_list' %}"
+           class="ts-sidebar__link {% if view_name == 'order_list' %}ts-sidebar__link--active{% endif %}">
+          Заказы
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'client_list' %}"
+           class="ts-sidebar__link {% if view_name == 'client_list' %}ts-sidebar__link--active{% endif %}">
+          Клиенты
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'service_list' %}"
+           class="ts-sidebar__link {% if view_name == 'service_list' %}ts-sidebar__link--active{% endif %}">
+          Услуги
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'purchase_list' %}"
+           class="ts-sidebar__link {% if view_name == 'purchase_list' %}ts-sidebar__link--active{% endif %}">
+          Покупки
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'about' %}"
+           class="ts-sidebar__link {% if view_name == 'about' %}ts-sidebar__link--active{% endif %}">
+          О сервисе
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <div class="ts-sidebar__user">
+    {% if request.user.is_authenticated %}
+      <div class="ts-sidebar__username">
+        {{ request.user.get_short_name|default:request.user.username }}
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'home' %}">
+        <button type="submit"
+                class="ts-sidebar__link ts-sidebar__logout-btn">
+          Выйти
+        </button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}?next={{ request.path }}"
+        class="ts-sidebar__link ts-sidebar__link--secondary">
+        Войти
+      </a>
+    {% endif %}
+  </div>
+</aside>
+{% endwith %}

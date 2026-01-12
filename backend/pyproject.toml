@@ -1,0 +1,71 @@
+[tool.black]
+line-length = 79 # длина строки
+target-version = ["py311"] # использование версии python 3.11
+skip-string-normalization = true # отключение нормализации кавычек в строках
+extend-exclude = '''
+/(
+  migrations
+  | static
+  | media
+  | \.venv
+  | venv
+)/
+'''
+
+[tool.ruff]
+line-length = 79 # длина строки
+indent-width = 4 # количество отступов
+target-version = "py311" # использование версии python 3.11
+fix = false  # применение только проверки, без автофиксов
+# Исключение директорий и файлов
+exclude = [
+  "venv",
+  ".venv",
+  "migrations",
+  "__pycache__",
+  "static",
+  "media",
+]
+
+# Настройки линтера
+[tool.ruff.lint]
+# Нестабильные и находящиеся в предварительной версии правила
+preview = true
+
+# Правила, которые должен применять линтер
+select = [
+    "UP",   # pyupgrade
+    "I",    # isort
+    "E",    # flake8-errors
+    "W",    # flake8-warnings
+    "F",    # flake8-pyflakes
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "S",    # flake8-bandit
+    "BLE",  # flake8-blind-except
+    "T20",  # flake8-print
+    "T10",  # flake8-debugger
+    "PT",   # flake8-pytest-style
+    "RUF",  # Ruff
+    "DJ",   # django
+    "DTZ",  # flake8-datetimez
+    "ERA",  # eradicate
+    "FURB", # refurb
+    "TRY",  # try/except best practices
+    "PL",   # pylint rules
+    "SIM",  # simplicity rules
+]
+# Игнорирование конкретных предупреждений линтера
+ignore = [
+    "E501",   # длина строки
+    "RUF001", # Игнорирование похожих символов с разными ASCII
+    "RUF002", # Игнорирование похожих символов с разными ASCII
+    "RUF003", # Игнорирование похожих символов с разными ASCII
+]
+
+# Игнорирование тестов
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101"]
+"**/test_*.py" = ["S101"]
+"**/*_test.py" = ["S101", "S106"]
+"**/pytest_tests/**/*.py" = ["S101", "S106", "PLC0415"]

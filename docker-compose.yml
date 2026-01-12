@@ -1,0 +1,40 @@
+# Версия схемы Compose файла
+version: '3.8'
+# Перечень volume
+volumes:
+  pg_data:
+
+# Перечень контейнеров
+services:
+  # Это контейнер БД
+  db:
+    # Из какого образа запустить контейнер:
+    image: postgres:16
+    # Файл (или список файлов) с переменными окружения
+    env_file: .env
+    # Какой volume подключить для этого контейнера
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  # Имя и описание контейнера с бэкендом
+  backend:
+    # Из какого Dockerfile собирать образ для этого контейнера:
+    build: ./backend/
+    env_file: .env
+    # Какие контейнеры нужно запустить до старта этого контейнера:
+    depends_on:
+      - db
+  # Имя третьего контейнера. Это контейнер с фронтендом
+  frontend:
+    # Из какого Dockerfile собирать образ для этого контейнера:
+    build: ./frontend/
+    env_file: .env
+  gateway:
+  # Из какого Dockerfile собирать образ для этого контейнера:
+    build: ./gateway/
+    env_file: .env
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static:/app/static/
+      - media:/app/media
+    ports:
+      - 8000:80

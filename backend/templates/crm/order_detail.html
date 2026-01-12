@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Детали заказа: {{ order.code }}{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h5>Информация о заказе</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Номер: </strong>{{ order.code }}</p>
+      <p><strong>Дата: </strong>{{ order.create|date:"d.m.Y" }}</p>
+      <p><strong>Клиент: </strong>{{ order.client.client_name }}</p>
+      <p><strong>Мобильный телефон: </strong>{{ order.client.mobile_phone }}</p>
+      <p><strong>Принятое оборудование: </strong>{{ order.accepted_equipment }}</p>
+      <p><strong>Детали заказа: </strong>{{ order.detail }}</p>
+      <p><strong>Услуги: </strong>
+        {% if order.services.all %}
+          {% for service in order.services.all %}
+            {{ service.service_name }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        {% else %}
+          не указаны
+        {% endif %}
+      </p>
+      <p><strong>Стоимость услуг: </strong>{{ order.total_price }} ₽</p>
+      <p><strong>Аванс: </strong>{{ order.advance}} ₽</p>
+      <p><strong>Долг клиента: </strong>{{ order.duty}} ₽</p>
+      <p><strong>Статус: </strong>{{ order.get_status_display }}</p>
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div class="card-header">
+        <h6>Запчасти к заказу</h6>
+    </div>
+    <div class="card-body">
+      {% for purchase in order.purchases.all %}
+          <div class="border-bottom pb-2 mb-2">
+            <p>Создано: {{ purchase.create|date:"d.m.Y" }}</p>
+            <p>Магазин: {{ purchase.store }}</p>
+            <p>Детали покупки: {{ purchase.detail }}</p>
+            <p>Статус:  {{ purchase.get_status_display }}</p>
+          </div>
+      {% empty %}
+          <p>Запчасти к заказу отсутствуют</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

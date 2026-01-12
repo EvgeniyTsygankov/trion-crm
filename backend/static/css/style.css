@@ -1,0 +1,108 @@
+/* Базовые стили для всей страницы */
+body {
+  margin: 0;
+  background-color: #f5f5f5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Левая фиксированная панель (классы из header.html) */
+.ts-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 220px;
+  height: 100vh;          /* полная высота экрана */
+  background-color: #999999; /* фон меню */
+  color: #fff;
+  padding: 20px 10px;
+  box-sizing: border-box;
+}
+
+/* Бренд/заголовок в панели */
+.ts-sidebar__brand {
+  margin-bottom: 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.ts-sidebar__brand-link {
+  color: #fff;
+  text-decoration: none;
+}
+
+.ts-sidebar__username {
+  display: block;
+  padding: 8px 12px;
+}
+
+/* Список ссылок в меню */
+.ts-sidebar__nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ts-sidebar__nav li {
+  margin-bottom: 10px;
+}
+
+.ts-sidebar__link {
+  display: block;
+  padding: 8px 12px;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.ts-sidebar__link:hover {
+  background-color: #555;
+}
+
+.ts-sidebar__logout-btn {
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+}
+
+.ts-sidebar__link--active {
+  background-color: #0d6efd; /* активный пункт меню */
+}
+
+/* Блок пользователя внизу панели */
+.ts-sidebar__user {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.ts-sidebar__username {
+  margin-bottom: 8px;
+}
+
+.ts-sidebar__link--secondary {
+  background-color: #444;
+}
+
+/* Основной контент: сдвиг вправо на ширину сайдбара */
+.ts-main {
+  margin-left: 220px;   /* та же ширина, что у .ts-sidebar */
+  padding: 20px 20px 40px;
+}
+
+/* Немного адаптивности: на узких экранах меню сверху */
+@media (max-width: 992px) {
+  .ts-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+  }
+
+  .ts-main {
+    margin-left: 0;
+  }
+}
