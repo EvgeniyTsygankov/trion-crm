@@ -7,10 +7,9 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
-    SpectacularSwaggerView,
     SpectacularRedocView,
+    SpectacularSwaggerView,
 )
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),

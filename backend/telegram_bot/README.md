@@ -296,15 +296,23 @@ client = CRMClient(access, refresh, base_url=API_BASE_URL)
 
 ## Переменные окружения
 
-Читаются в config.py:
-
 ```
-API_BASE_URL=http://127.0.0.1:8000       # базовый URL API CRM (без завершающего слэша)
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF...     # токен бота от BotFather
+# Основные переменные для бота
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF...        # токен бота от BotFather
 
-# необязательно; если пусто — бот доступен всем
-TELEGRAM_ALLOWED_CHAT_IDS=12345,67890    # список разрешённых chat_id через запятую
+# Разрешённые chat_id (если пусто — бот доступен всем)
+TELEGRAM_ALLOWED_CHAT_IDS=1234567         # один id
+# или несколько через запятую:
+# TELEGRAM_ALLOWED_CHAT_IDS=1234567,54321
+
+# Базовый URL API CRM:
+# - при запуске бота в docker-compose (в одной сети с backend):
+API_BASE_URL=http://backend:8000
+# - при локальном запуске бота против dev-сервера:
+# API_BASE_URL=http://127.0.0.1:8000
 ```
+
+Остальные переменные (DJANGO_ALLOWED_HOSTS, POSTGRES_* и т.п.) относятся к backend‑службе Django и описаны в README backend’а.
 
 ## Логирование
 
@@ -330,30 +338,77 @@ TELEGRAM_ALLOWED_CHAT_IDS=12345,67890    # список разрешённых c
 
 ## Запуск бота
 
-Точка входа: telegram_bot/main.py:
+1. Локальный запуск (без Docker)
 
-```python
-from .bot import bot
+Из каталога backend:
 
-def main():
-    bot.infinity_polling(skip_pending=True)
+```Bash
+python -m telegram_bot.main
+```
+Перед этим должен быть запущен backend (Django dev‑server или gunicorn), и API_BASE_URL должен указывать на него, например:
 
-if __name__ == '__main__':
-    main()
+```env
+API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Запуск из каталога backend: `python -m telegram_bot.main`
+2. Запуск в Docker Compose (рекомендуемый для прод/интеграций)
+
+В docker-compose.yml сервис бота выглядит так:
+
+```yaml
+bot:
+build: ./backend/
+env_file: ./backend/.env
+depends_on:
+  - backend
+command: ["python", "-m", "telegram_bot.main"]
+restart: unless-stopped
+  ```
+
+Команда запуска всего стека из корня проекта (crm-project):
+
+```bash
+docker compose up --build
+```
+
+При этом:
+
+- backend доступен как сервис backend на порту 8000 внутри сети compose;
+
+- в .env для бота должно быть:
+
+```env
+API_BASE_URL=http://backend:8000
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_ALLOWED_CHAT_IDS=583210974  # или список id
+```
 
 Перед запуском убедитесь, что:
 
-1. Настроено и работает backend‑приложение CRM:
-   -  запущен Django‑сервер,
-   -  доступны эндпоинты '/api/clients/', '/api/orders/', '/api/purchases/',
-   -  настроены JWT эндпоинты Djoser: '/api/auth/jwt/create/', '/api/auth/jwt/refresh/'.
+1. Backend CRM запущен
 
-2. В '.env' корректно указаны:
-   - API_BASE_URL (адрес backend’а),
-   - TELEGRAM_BOT_TOKEN,
-   - (при необходимости) TELEGRAM_ALLOWED_CHAT_IDS.
+  - Применены миграции, создан пользователь bot (или другой, которым логинится бот).
+  - Работают эндпоинты:
+    - POST /api/auth/jwt/create/, POST /api/auth/jwt/refresh/
+    - GET /api/clients/?search=+7999...
+    - GET /api/orders/, GET /api/purchases/
 
-После этого бот будет доступен в Telegram и сможет работать с данными вашей CRM.
+2. Переменные окружения бота заданы
+
+Обязательно:
+  - TELEGRAM_BOT_TOKEN=...
+  - API_BASE_URL=
+    - локально: http://127.0.0.1:8000
+    - в docker-compose: http://backend:8000
+Опционально:
+- TELEGRAM_ALLOWED_CHAT_IDS=1234567,54321 — список разрешённых chat_id.
+
+3. В Docker Compose
+
+  - сервис bot запускается так:
+
+    ```YAML
+    command: ["python", "-m", "telegram_bot.main"]
+    env_file: ./backend/.env
+    depends_on: [backend]
+    ```

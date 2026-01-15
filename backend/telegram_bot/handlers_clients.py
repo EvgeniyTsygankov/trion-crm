@@ -1,5 +1,4 @@
-"""
-Хендлеры, связанные с разделом 'Клиенты'.
+"""Хендлеры, связанные с разделом 'Клиенты'.
 
 Содержит обработчики:
 - 'Клиенты' — вход в раздел, запрос номера телефона клиента;
@@ -71,8 +70,8 @@ def clients_by_phone(message):
         entity_label = ENTITY_LABELS.get(entity, entity)
         company = client['company']
         address = client['address']
-        company_display = '-' if not company else company
-        address_display = '-' if not address else address
+        company_display = company or '-'
+        address_display = address or '-'
         bot.send_message(
             chat_id,
             (

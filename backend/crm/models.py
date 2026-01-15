@@ -80,7 +80,7 @@ class Client(models.Model):
         constraints = (
             models.CheckConstraint(
                 name='company_required_for_UL',
-                check=Q(entity_type=EntityType.UL, company__gt='')
+                condition=Q(entity_type=EntityType.UL, company__gt='')
                 | ~Q(entity_type=EntityType.UL),
             ),
         )
@@ -196,11 +196,11 @@ class Order(models.Model):
         constraints = (
             models.CheckConstraint(
                 name='order_accepted_equipment_not_empty',
-                check=~Q(accepted_equipment=''),
+                condition=~Q(accepted_equipment=''),
             ),
             models.CheckConstraint(
                 name='order_detail_not_empty',
-                check=~Q(detail=''),
+                condition=~Q(detail=''),
             ),
         )
 
@@ -325,3 +325,8 @@ class Purchase(models.Model):
         ordering = ('-id',)
         verbose_name = 'Покупка'
         verbose_name_plural = 'Покупки'
+
+    def __str__(self):
+        """Возвращает строковое представление покупки."""
+        order_code = self.order.code if self.order else 'без заказа'
+        return f'Покупка для заказа {order_code}, {self.detail}, {self.store}'

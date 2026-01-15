@@ -80,13 +80,13 @@ urlpatterns = [
 ]
 ```
 
-То есть доступны стандартные DRF‑маршруты:
+Основные маршруты:
 
-- /api/clients/ - список клиентов
+- /api/clients/?search=+7999... — поиск клиента по номеру телефона
 - /api/clients/{id}/ - клиент по ID
-- /api/orders/ - список заказов
+- /api/orders/ - список заказов (с фильтрацией и поиском)
 - /api/orders/{id}/ - заказ по ID
-- /api/purchases/ - список покупок
+- /api/purchases/ - список покупок (с фильтрацией и поиском)
 - /api/purchases/{id}/ - покупка по ID
 
 # Ресурсы и фильтрация
@@ -94,9 +94,10 @@ urlpatterns = [
 ## 1. Клиенты - ClientViewSet
 
 URL‑ы
-- 'GET /api/clients/'
-- 'GET /api/clients/{id}/'
-- 
+- `GET /api/clients/?search=+7999...` — поиск клиента по номеру телефона  
+  (параметр `search` обязателен, без него вернётся 400)
+- `GET /api/clients/{id}/` — детальная информация о клиенте по ID
+
 Сериализатор: `ClientSerializer`
 
 ```json
@@ -138,6 +139,7 @@ class ClientViewSet(ReadOnlyModelViewSet):
 ```
 GET /api/clients/?search=+7999
 Authorization: Bearer <token>
+Accept: application/json
 ```
 
 ## 2. Заказы — OrderViewSet

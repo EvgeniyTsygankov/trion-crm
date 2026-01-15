@@ -182,8 +182,7 @@ class ServiceInOrderSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        """
-        Автоподстановка базовой цены услуги, если сумма не указана.
+        """Автоподстановка базовой цены услуги, если сумма не указана.
 
         Работает при создании и обновлении.
         """

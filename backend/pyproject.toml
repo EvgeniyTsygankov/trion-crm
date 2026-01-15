@@ -39,6 +39,7 @@ select = [
     "E",    # flake8-errors
     "W",    # flake8-warnings
     "F",    # flake8-pyflakes
+    "D",    # flake8-docstrings
     "B",    # flake8-bugbear
     "C4",   # flake8-comprehensions
     "S",    # flake8-bandit
@@ -57,15 +58,15 @@ select = [
 ]
 # Игнорирование конкретных предупреждений линтера
 ignore = [
-    "E501",   # длина строки
-    "RUF001", # Игнорирование похожих символов с разными ASCII
-    "RUF002", # Игнорирование похожих символов с разными ASCII
-    "RUF003", # Игнорирование похожих символов с разными ASCII
+  "E501",
+  "RUF001", "RUF002", "RUF003",
+  "D203", "D213",
 ]
 
 # Игнорирование тестов
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**/*.py" = ["S101"]
 "**/test_*.py" = ["S101"]
-"**/*_test.py" = ["S101", "S106"]
-"**/pytest_tests/**/*.py" = ["S101", "S106", "PLC0415"]
+"**/*_test.py" = ["S101"]
+"**/pytest_tests/**/*.py" = ["S101"]
+"manage.py" = ["TRY003", "PLC0415"]

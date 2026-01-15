@@ -1,5 +1,4 @@
-"""
-Модуль тестирования API для CRM-системы.
+"""Модуль тестирования API для CRM-системы.
 
 Содержит тесты для проверки работы API клиентов, заказов и покупок.
 """
@@ -51,21 +50,19 @@ class TestClientAPI(BaseAPITest):
         """Очистка после каждого теста."""
         self.teardown_auth()
 
-    def test_client_list(self):
-        """Проверяет получение списка клиентов.
-
-        GET /api/clients/
-        """
+    def test_client_list_requires_search(self):
+        """GET /api/clients/ без ?search= должен вернуть 400 Bad Request."""
         resp = self.api.get('/api/clients/')
-        assert (
-            resp.status_code == HTTPStatus.OK
-        ), 'Статус ответа при запросе списка клиентов должен быть 200 OK'
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            'Статус ответа при запросе списка клиентов без параметра '
+            '?search= должен быть 400 BAD REQUEST'
+        )
 
-        data = get_results(resp.json())
-        client_ids = [client['id'] for client in data]
-        assert (
-            self.client1.id in client_ids
-        ), 'Созданный клиент должен присутствовать в списке'
+        data = resp.json()
+        assert data.get('detail') == 'Параметр ?search= обязателен.', (
+            'Ответ при отсутствии параметра ?search= должен содержать '
+            'detail="Параметр ?search= обязателен."'
+        )
 
     def test_client_detail(self):
         """Проверяет получение детальной информации о клиенте.

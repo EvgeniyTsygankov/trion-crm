@@ -1,5 +1,4 @@
-"""
-Тестовые фикстуры для CRM-системы.
+"""Тестовые фикстуры для CRM-системы.
 
 Создаёт готовый набор тестовых данных:
 - 2 клиента (ФЛ и ЮЛ)
@@ -38,7 +37,7 @@ def create_test_user():
     return User.objects.create_user(
         username='testuser',
         email='test@example.com',
-        password='testpass123',
+        password='testpass123',  # noqa
     )
 
 
@@ -68,11 +67,7 @@ def api_user(db):
 
 @pytest.fixture
 def api_client_auth(api_client, api_user):
-    """
-    APIClient с уже настроенной JWT-аутентификацией.
-
-    Удобно для тестов, которым не нужен кастомный BaseAPITest.
-    """
+    """Возвращает API-клиент с настроенной JWT-аутентификацией."""
     setup_api_client_with_auth(api_client, api_user)
     try:
         yield api_client
@@ -81,8 +76,7 @@ def api_client_auth(api_client, api_user):
 
 
 def create_crm_orders_and_purchases():
-    """
-    Создаёт тестовые данные для клиентов, заказов, услуг и покупок.
+    """Создаёт тестовые данные для клиентов, заказов, услуг и покупок.
 
     Возвращает словарь с объектами:
       client1, client2, category, service1, service2,

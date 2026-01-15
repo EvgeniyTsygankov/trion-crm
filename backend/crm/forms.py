@@ -24,7 +24,7 @@ class ClientForm(forms.ModelForm):
             'company',
             'address',
         )
-        widgets = {
+        widgets = {  # noqa: RUF012
             'client_name': forms.TextInput(
                 attrs={
                     'class': 'form-control',
@@ -48,14 +48,14 @@ class ClientForm(forms.ModelForm):
                 }
             ),
         }
-        labels = {
+        labels = {  # noqa: RUF012
             'client_name': 'Имя клиента',
             'mobile_phone': 'Мобильный телефон',
             'entity_type': 'Тип клиента',
             'company': 'Название компании',
             'address': 'Домашний адрес',
         }
-        error_messages = {
+        error_messages = {  # noqa: RUF012
             'mobile_phone': {
                 'unique': 'Клиент с таким номером телефона уже существует.',
             },
@@ -84,7 +84,7 @@ class OrderForm(forms.ModelForm):
             'advance',
             'status',
         )
-        widgets = {
+        widgets = {  # noqa: RUF012
             'client': forms.Select(
                 attrs={'class': 'form-select js-client-select'}
             ),
@@ -121,7 +121,7 @@ class ServiceForm(forms.ModelForm):
 
         model = Service
         fields = ('category', 'service_name', 'amount')
-        widgets = {
+        widgets = {  # noqa: RUF012
             'category': forms.Select(attrs={'class': 'form-select'}),
             'service_name': forms.TextInput(
                 attrs={
@@ -138,7 +138,7 @@ class ServiceForm(forms.ModelForm):
                 }
             ),
         }
-        error_messages = {
+        error_messages = {  # noqa: RUF012
             'service_name': {
                 'unique': 'Услуга с таким наименованием уже существует.',
             },
@@ -153,7 +153,7 @@ class PurchaseForm(forms.ModelForm):
 
         model = Purchase
         fields = ('order', 'store', 'detail', 'status')
-        widgets = {
+        widgets = {  # noqa: RUF012
             'order': forms.Select(
                 attrs={'class': 'form-select', 'placeholder': 'Выберите заказ'}
             ),

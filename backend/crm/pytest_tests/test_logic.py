@@ -1,5 +1,4 @@
-"""
-Тесты бизнес-логики CRM-системы.
+"""Тесты бизнес-логики CRM-системы.
 
 Этот файл содержит тесты для проверки:
 1. Валидации данных (номера телефонов, обязательных полей)
@@ -111,12 +110,10 @@ def test_client_total_duty_aggregates_orders(crm_data):
 @pytest.mark.django_db
 def test_order_queryset_total_duty(crm_data):
     """OrderQuerySet.total_duty должен корректно считать общий долг."""
-    from crm.models import Order
-
     total = Order.objects.all().total_duty()
     # client1 (order1 + order2) = 1200 + 1000 = 2200
     # client2 (order3): services_sum=0, advance=200 → duty=-200
-    # Итого: 2200 + (-200) = 2000
+    # Итого: 2200 + (-200) = 2000  # noqa: ERA001
     assert total == Decimal('2000.00'), (
         'OrderQuerySet.total_duty должен возвращать сумму '
         '(services_sum - advance) по всем заказам выборки'

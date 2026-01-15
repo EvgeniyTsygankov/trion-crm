@@ -30,8 +30,7 @@ from .models import (
 
 
 class ClientListView(BaseListView):
-    """
-    Представление для отображения списка клиентов.
+    """Представление для отображения списка клиентов.
 
     Наследует функционал базового ListView с добавлением фильтрации
     и поиска по клиентам. Поддерживает фильтрацию по типу клиента
@@ -43,8 +42,7 @@ class ClientListView(BaseListView):
     context_object_name = 'clients'
 
     def get_queryset(self):
-        """
-        Возвращает отфильтрованный и отсортированный QuerySet клиентов.
+        """Возвращает отфильтрованный и отсортированный QuerySet клиентов.
 
         Обрабатывает GET-параметры для фильтрации:
         - entity_type: фильтр по типу клиента (FL/UL)
@@ -73,8 +71,7 @@ class ClientListView(BaseListView):
         return qs
 
     def get_context_data(self, **kwargs):
-        """
-        Расширяет контекст шаблона статистикой и данными фильтров.
+        """Расширяет контекст шаблона статистикой и данными фильтров.
 
         Добавляет в контекст:
         - Статистику клиентов: общее количество, количество физ. и юр. лиц
@@ -160,7 +157,7 @@ class ServiceUpdateView(BaseUpdateView):
     form_class = ServiceForm
     success_message = 'Услуга обновлена!'
 
-    def get_success_url(self):
+    def get_success_url(self):  # noqa: PLR6301
         """Перенаправляет на страницу списка услуг."""
         return reverse_lazy('service_list')
 
@@ -174,8 +171,7 @@ class ServiceDeleteView(BaseDeleteView):
 
 
 class OrderListView(BaseListView):
-    """
-    Представление для отображения и фильтрации списка заказов.
+    """Представление для отображения и фильтрации списка заказов.
 
     Предоставляет расширенный функционал фильтрации заказов по:
     - статусу заказа
@@ -191,8 +187,7 @@ class OrderListView(BaseListView):
     context_object_name = 'orders'
 
     def get_queryset(self):
-        """
-        Возвращает отфильтрованный QuerySet заказов на основе GET-параметров.
+        """Возвращает отфильтрованный QuerySet заказов на основе GET-параметров.
 
         Поддерживает фильтрацию по следующим параметрам:
         - status: статус заказа (из OrderStatus)
@@ -232,8 +227,7 @@ class OrderListView(BaseListView):
         return queryset
 
     def get_context_data(self, **kwargs):
-        """
-        Расширяет контекст шаблона статистикой и данными фильтров.
+        """Расширяет контекст шаблона статистикой и данными фильтров.
 
         Добавляет в контекст:
         - Общую статистику по заказам
@@ -313,7 +307,7 @@ class PurchaseListView(BaseListView):
     template_name = 'crm/purchase_list.html'
     context_object_name = 'purchases'
 
-    def get_queryset(self):
+    def get_queryset(self):  # noqa: PLR6301
         """Возвращает оптимизированный QuerySet покупок."""
         return Purchase.objects.select_related('order__client')
 
@@ -375,8 +369,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
     template_name = 'crm/home_page.html'
 
     def get_context_data(self, **kwargs):
-        """
-        Формирует контекст данных для главной страницы CRM-системы.
+        """Формирует контекст данных для главной страницы CRM-системы.
 
         Собирает ключевые бизнес-метрики и аналитику по заказам:
         - Общие счетчики заказов и клиентов

@@ -6,7 +6,8 @@
 """
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import filters, status, viewsets
+from rest_framework.response import Response
 
 from crm.models import Client, Order, Purchase
 
@@ -14,12 +15,11 @@ from .serializers import ClientSerializer, OrderSerializer, PurchaseSerializer
 
 
 class ClientViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet для работы с клиентами в режиме только для чтения.
+    """ViewSet для работы с клиентами в режиме только для чтения.
 
-    Предоставляет следующие API endpoints:
-    - GET /api/clients/ - список всех клиентов
-    - GET /api/clients/{id}/ - детальная информация о клиенте
+    Основное использование:
+    - GET /api/clients/?search=+7999...  — поиск клиента по телефону
+    - GET /api/clients/{id}/             — детальная информация
 
     Поддерживает поиск клиента по номеру мобильного телефона.
     """
@@ -29,10 +29,18 @@ class ClientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('mobile_phone',)
 
+    def list(self, request, *args, **kwargs):
+        """Запрещаем /api/clients/ без параметра ?search=."""
+        if not request.query_params.get('search'):
+            return Response(
+                {"detail": "Параметр ?search= обязателен."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().list(request, *args, **kwargs)
+
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet для работы с заказами в режиме только для чтения.
+    """ViewSet для работы с заказами в режиме только для чтения.
 
     Предоставляет следующие API endpoints:
     - GET /api/orders/ - список всех заказов
@@ -66,8 +74,7 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PurchaseViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet для работы с покупками (закупками) в режиме только для чтения.
+    """ViewSet для работы с покупками (закупками) в режиме только для чтения.
 
     Предоставляет следующие API endpoints:
     - GET /api/purchases/ - список всех покупок

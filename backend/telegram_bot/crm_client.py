@@ -1,5 +1,4 @@
-"""
-Клиент для обращения к REST API CRM из Telegram-бота.
+"""Клиент для обращения к REST API CRM из Telegram-бота.
 
 Содержит:
 - функцию get_tokens для получения JWT-токенов по логину и паролю;
@@ -54,7 +53,7 @@ def get_tokens(username, password):
     """
     token_url = f'{API_BASE_URL}/api/auth/jwt/create/'
     payload = {'username': username, 'password': password}
-    response = requests.post(token_url, json=payload)
+    response = requests.post(token_url, json=payload, timeout=5)
     response.raise_for_status()
     data = response.json()
     return {
@@ -112,7 +111,8 @@ class CRMClient:
         response.raise_for_status()
         return response
 
-    def _extract_results(self, data):
+    @staticmethod
+    def _extract_results(data):
         """Вернуть список из ответа API: с пагинацией и без."""
         return (
             data['results']

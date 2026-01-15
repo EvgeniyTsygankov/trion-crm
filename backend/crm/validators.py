@@ -13,7 +13,7 @@ phone_validator = RegexValidator(
 def validate_company_for_legal(value, entity_type):
     """Проверяет, что поле company заполнено."""
     if entity_type == 'UL' and not (value or '').strip():
-        raise ValidationError(
+        raise ValidationError(  # noqa: TRY003
             'Название компании обязательно для юридических лиц',
             code='company_required_for_legal',
         )

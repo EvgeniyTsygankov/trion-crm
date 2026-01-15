@@ -106,7 +106,8 @@ class PurchaseSerializer(serializers.ModelSerializer):
             'status',
         )
 
-    def get_order_code(self, obj):
+    @staticmethod
+    def get_order_code(obj):
         """Возвращает код заказа или None, если заказа нет."""
         if obj.order is None:
             return None

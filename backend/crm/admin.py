@@ -1,5 +1,4 @@
-"""
-Административная панель Django для управления рецептами и связанными моделями.
+"""Административная панель Django для управления рецептами и связанными моделями.
 
 Этот модуль регистрирует модели в админ-панели Django и настраивает интерфейс
 для удобного управления данными о клиентах, заказах, покупках,
@@ -33,7 +32,7 @@ class ClientAdmin(admin.ModelAdmin):
     readonly_fields = ('total_duty',)
 
     @admin.display(description='Общий долг / переплата, ₽')
-    def total_duty_display(self, obj):
+    def total_duty_display(self, obj):  # noqa: PLR6301
         """Отображение общего баланса по всем заказам клиента."""
         return obj.total_duty
 
@@ -60,12 +59,12 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ('number', 'create', 'code', 'total_price', 'duty')
 
     @admin.display(description='Сумма услуг, ₽')
-    def total_price_display(self, obj):
+    def total_price_display(self, obj):  # noqa: PLR6301
         """Отображение общей стоимости услуг в заказе."""
         return obj.total_price
 
     @admin.display(description='Баланс по заказу, ₽')
-    def duty_display(self, obj):
+    def duty_display(self, obj):  # noqa: PLR6301
         """Отображение долга / переплаты по заказу."""
         return obj.duty
 
@@ -85,7 +84,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
     model = Category
     list_display = ('title', 'slug')
-    prepopulated_fields = {'slug': ('title',)}
+    prepopulated_fields = {'slug': ('title',)}  # noqa: RUF012
 
 
 @admin.register(Service)

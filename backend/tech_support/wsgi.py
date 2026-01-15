@@ -1,5 +1,4 @@
-"""
-WSGI config for tech_support project.
+"""WSGI config for tech_support project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
