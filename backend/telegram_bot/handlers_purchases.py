@@ -3,7 +3,7 @@
 Содержит обработчики:
 - 'Покупки' — вход в раздел и показ подменю фильтров;
 - 'Все покупки' — вывод последних покупок без фильтрации по статусу;
-- 'Ожидает получения' — покупки со статусом awaiting_receipt;
+- 'Ожидается поставка' — покупки со статусом awaiting_receipt;
 - 'Получено' — покупки со статусом received;
 - 'Установлено' — покупки со статусом installed.
 
@@ -45,11 +45,11 @@ def purchases_all_command(message):
     send_purchases(chat_id)
 
 
-@bot.message_handler(func=lambda m: m.text == 'Ожидает получения')
+@bot.message_handler(func=lambda m: m.text == 'Ожидается поставка')
 def purchases_awaiting_command(message):
-    """Выводит покупки со статусом 'ожидает получения'."""
+    """Выводит покупки со статусом 'ожидается поставка'."""
     chat_id = message.chat.id
-    send_purchases(chat_id, status='awaiting_receipt')
+    send_purchases(chat_id, status='delivery_expected')
 
 
 @bot.message_handler(func=lambda m: m.text == 'Получено')

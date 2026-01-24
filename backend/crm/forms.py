@@ -1,7 +1,16 @@
 """Формы для CRM проекта."""
 
-from django import forms
+from decimal import Decimal
 
+from django import forms
+from django.core.exceptions import ValidationError
+
+from .constants import (
+    COUNT_SERVICES_IN_ORDER,
+    MONEY_DECIMAL_PLACES,
+    MONEY_MAX_DIGITS,
+    SERVICES_LIMIT_ERROR,
+)
 from .models import (
     Client,
     Order,
@@ -11,7 +20,7 @@ from .models import (
 
 
 class ClientForm(forms.ModelForm):
-    """Форма для клиекта."""
+    """Форма клиента."""
 
     class Meta:
         """Мета-класс для формы Client."""
@@ -28,7 +37,7 @@ class ClientForm(forms.ModelForm):
             'client_name': forms.TextInput(
                 attrs={
                     'class': 'form-control',
-                    'placeholder': 'Введите имя клиента',
+                    'placeholder': 'ФИО',
                 }
             ),
             'mobile_phone': forms.TextInput(
@@ -38,13 +47,13 @@ class ClientForm(forms.ModelForm):
             'company': forms.TextInput(
                 attrs={
                     'class': 'form-control',
-                    'placeholder': 'Название компании (для юр. лиц)',
+                    'placeholder': 'поле для юр. лиц',
                 }
             ),
             'address': forms.TextInput(
                 attrs={
                     'class': 'form-control',
-                    'placeholder': 'Домашний адрес (для физ. лиц)',
+                    'placeholder': 'улица, здание, помещение',
                 }
             ),
         }
@@ -53,7 +62,7 @@ class ClientForm(forms.ModelForm):
             'mobile_phone': 'Мобильный телефон',
             'entity_type': 'Тип клиента',
             'company': 'Название компании',
-            'address': 'Домашний адрес',
+            'address': 'Адрес',
         }
         error_messages = {  # noqa: RUF012
             'mobile_phone': {
@@ -66,10 +75,39 @@ class OrderForm(forms.ModelForm):
     """Форма для заказа."""
 
     services = forms.ModelMultipleChoiceField(
-        queryset=Service.objects.all(),
+        queryset=Service.objects.select_related('category').order_by(
+            'category__title', 'service_name'
+        ),
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        widget=forms.SelectMultiple(
+            attrs={'class': 'form-select js-services-select'}
+        ),
         label='Услуги',
+    )
+    purchases_total = forms.DecimalField(
+        label='Товар (покупки), ₽',
+        required=False,
+        disabled=True,
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+    )
+
+    total_amount = forms.DecimalField(
+        label='Общая сумма, ₽',
+        required=False,
+        disabled=True,
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+    )
+    duty = forms.DecimalField(
+        label='Долг / переплата, ₽',
+        required=False,
+        disabled=True,
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
     )
 
     class Meta:
@@ -81,7 +119,12 @@ class OrderForm(forms.ModelForm):
             'accepted_equipment',
             'detail',
             'services',
+            'services_total_override',
+            'purchases_total',
+            'total_amount',
             'advance',
+            'paid',
+            'duty',
             'status',
         )
         widgets = {  # noqa: RUF012
@@ -91,26 +134,79 @@ class OrderForm(forms.ModelForm):
             'accepted_equipment': forms.TextInput(
                 attrs={
                     'class': 'form-control',
-                    'placeholder': ('Наименование устройства, модель, цвет'),
+                    'placeholder': 'Наименование оборудования',
                 }
             ),
             'detail': forms.Textarea(
                 attrs={
                     'class': 'form-control',
+                    'placeholder': 'Описание неисправности',
                     'rows': 4,
-                    'placeholder': 'Описание проблемы или работ...',
                 }
             ),
-            'advance': forms.NumberInput(
+            'services_total_override': forms.NumberInput(
                 attrs={
                     'class': 'form-control',
                     'min': 0,
                     'step': 0.01,
-                    'placeholder': 'Аванс, ₽',
+                    'placeholder': 'Автоматически заполняется из услуг',
                 }
+            ),
+            'advance': forms.NumberInput(
+                attrs={'class': 'form-control', 'min': 0, 'step': 0.01}
+            ),
+            'paid': forms.NumberInput(
+                attrs={'class': 'form-control', 'min': 0, 'step': 0.01}
             ),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        """Инициализация формы заказа.
+
+        - Настраивает отображение услуг в списке (название + цена).
+        - При редактировании предзаполняет поле стоимости услуг
+        автоматически рассчитанным значением, если override не задан.
+        """
+        super().__init__(*args, **kwargs)
+        self.order_fields(self.Meta.fields)
+        self.fields['services'].label_from_instance = (
+            lambda s: f'{s.service_name} - {s.amount} ₽'
+        )
+        self.fields['services'].help_text = SERVICES_LIMIT_ERROR % {
+            'limit': COUNT_SERVICES_IN_ORDER
+        }
+        if (
+            self.instance
+            and self.instance.pk
+            and self.instance.services_total_override is None
+        ):
+            self.initial['services_total_override'] = (
+                self.instance.services_total
+            )
+        if self.instance and self.instance.pk:
+            self.initial['purchases_total'] = self.instance.purchases_total
+            self.initial['total_amount'] = self.instance.total_amount
+            self.initial['duty'] = self.instance.duty
+        else:
+            self.initial['purchases_total'] = Decimal('0.00')
+            self.initial['total_amount'] = Decimal('0.00')
+            self.initial['duty'] = Decimal('0.00')
+
+    def clean_services(self):
+        """Валидация поля выбора услуг.
+
+        Проверяет, что выбрано не более COUNT_SERVICES_IN_ORDER услуг.
+        Вызывается автоматически при валидации формы.
+        """
+        services = self.cleaned_data.get('services')
+        if services and services.count() > COUNT_SERVICES_IN_ORDER:
+            raise ValidationError(
+                SERVICES_LIMIT_ERROR,
+                code='services_limit',
+                params={'limit': COUNT_SERVICES_IN_ORDER},
+            )
+        return services
 
 
 class ServiceForm(forms.ModelForm):
@@ -146,16 +242,16 @@ class ServiceForm(forms.ModelForm):
 
 
 class PurchaseForm(forms.ModelForm):
-    """Форма для заказа."""
+    """Форма для покупки."""
 
     class Meta:
         """Мета-класс для формы Purchase."""
 
         model = Purchase
-        fields = ('order', 'store', 'detail', 'status')
+        fields = ('order', 'store', 'detail', 'cost', 'status')
         widgets = {  # noqa: RUF012
             'order': forms.Select(
-                attrs={'class': 'form-select', 'placeholder': 'Выберите заказ'}
+                attrs={'class': 'form-select js-order-select'}
             ),
             'store': forms.TextInput(
                 attrs={
@@ -169,9 +265,22 @@ class PurchaseForm(forms.ModelForm):
                     'rows': 3,
                     'placeholder': (
                         'Подробное описание покупки: что куплено, цена, '
-                        'ссылка, номер заказ, дополнительные детали...'
+                        'ссылка, дополнительные детали...'
                     ),
                 }
             ),
+            'cost': forms.NumberInput(
+                attrs={'class': 'form-control', 'min': 0, 'step': 0.01}
+            ),
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        """Настраивает отображение заказов в выпадающем списке."""
+        super().__init__(*args, **kwargs)
+        self.fields['order'].queryset = Order.objects.select_related(
+            'client'
+        ).order_by('-id')
+        self.fields['order'].label_from_instance = (
+            lambda o: f'{o.code} — {o.client.client_name}'
+        )

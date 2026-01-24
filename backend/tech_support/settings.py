@@ -13,6 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.contrib.messages import constants as messages
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -37,8 +38,6 @@ ALLOWED_HOSTS = os.getenv(
 
 API_JWT_TOKEN = os.getenv('API_JWT_TOKEN')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
 
 def env_required(name: str) -> str:
     """Вернуть значение переменной окружения или упасть, если его нет.
@@ -51,6 +50,9 @@ def env_required(name: str) -> str:
             f'Не задана обязательная переменная окружения: {name}'
         )
     return value
+
+
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 
 if DEBUG:
@@ -80,11 +82,17 @@ else:
         }
     }
 
+CSRF_FAILURE_VIEW = 'tech_support.error_views.csrf_failure'
+
 LANGUAGE_CODE = 'ru-RU'
 
 LOGIN_URL = '/auth/login/'
 
 # Application definition
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+}
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -96,23 +104,23 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
-    'crm.apps.CrmConfig',
-    'api.apps.ApiConfig',
     'django_bootstrap5',
     'sequences',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'crm.apps.CrmConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
 ]
 
 REST_FRAMEWORK = {
@@ -127,6 +135,20 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+DJOSER = {
+    'PERMISSIONS': {
+        'user_create': ['rest_framework.permissions.IsAdminUser'],
+        'user_delete': ['rest_framework.permissions.IsAdminUser'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
+        'user': ['rest_framework.permissions.IsAdminUser'],
+    }
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -160,10 +182,6 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=100),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-}
 
 ROOT_URLCONF = 'tech_support.urls'
 
@@ -209,8 +227,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -223,15 +239,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Твоя общая папка со статикой (может быть пустой, но так правильно)
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # это backend/static
+    BASE_DIR / 'static',
 ]
 
-# Куда collectstatic будет собирать файлы для продакшена
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
+
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type

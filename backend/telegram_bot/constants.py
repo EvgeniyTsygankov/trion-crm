@@ -58,7 +58,9 @@ ORDER_STATUS_TEXT_TO_CODE = {
 }
 
 PURCHASE_STATUS_LABELS = {
-    'awaiting_receipt': 'ожидает получения',
+    'delivery_expected': 'ожидается поставка',
     'received': 'получено',
     'installed': 'установлено',
 }
+
+SERVICE_BUTTONS = {'Меню', 'Авторизация', 'Клиенты', 'Заказы', 'Покупки'}

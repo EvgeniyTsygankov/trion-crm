@@ -9,8 +9,6 @@
 - HTML‑шаблоны (Django templates);
 - административная панель Django.
 
-> Весь интерфейс приложения `crm` доступен **только авторизованным пользователям** (`LoginRequiredMixin`).
-
 ---
 
 ## Структура приложения
@@ -19,13 +17,30 @@
 
 - [`models.py`](models.py) — модели `Client`, `Order`, `Service`, `Category`, `Purchase` и перечисления статусов.
 - [`views.py`](views.py) — представления для клиентов, заказов, услуг, покупок и главной страницы.
-- [`urls.py`](urls.py) — маршруты веб‑интерфейса (`/clients/`, `/orders/`, `/purchases/`, `/services/`, `/`).
+- [`urls.py`](urls.py) — маршруты веб‑интерфейса (`/clients/`, `/orders/`, `/purchases/`, `/services/`, `/about/`, `/`).
 - [`forms.py`](forms.py) — `ModelForm` для клиентов, заказов, услуг и покупок.
+- [`serializers.py`](serializers.py) — сериализаторы для read‑only API (используются приложением `api`).
 - [`base_views.py`](base_views.py) — общие базовые классы (List/Create/Update/Detail/Delete).
 - [`mixins.py`](mixins.py), [`labels.py`](labels.py) — миксин для автоматических заголовков форм.
 - [`validators.py`](validators.py) — валидация телефона и бизнес‑правило для юр. лиц.
-- [`constants.py`](constants.py) — константы (длины полей, деньги, пагинация, лимит последних заказов).
+- [`constants.py`](constants.py) — константы (длины полей, деньги, пагинация и т.д.).
 - [`admin.py`](admin.py) — настройки административной панели Django.
+
+---
+
+## Аутентификация
+
+Веб-интерфейс CRM доступен **только авторизованным пользователям**
+(`LoginRequiredMixin`).
+
+В текущей конфигурации проекта оставлены только маршруты:
+
+- `GET/POST /auth/login/` — вход
+- `POST /auth/logout/` — выход
+
+Функциональность страниц **сброса/восстановления пароля** через стандартные
+Django-шаблоны (`password_reset_*`, `password_change_*`) отключена и в проекте
+не используется.
 
 ---
 
@@ -44,19 +59,24 @@
 - `active_orders_count` — количество **активных** заказов  
   (все, кроме `completed` и `not_relevant`).
 - `total_duty` — суммарный баланс по всем заказам (`Order.objects.total_duty()`).
-- `recent_orders` — список последних заказов (лимит `RECENT_ORDERS_LIMIT`), с предзагруженными клиентами.
+- `recent_orders` — список последних заказов (лимит `ORDERS_LIMIT_ON_HOMEPAGE`), с предзагруженными клиентами.
+
+![Главная страница](../docs/screenshots/8.png)
 
 ### Клиенты
 
 Маршруты:
 
-- `GET /clients/` → `ClientListView`
-- `GET /clients/create/` → `ClientCreateView`
-- `GET /clients/<id>/` → `ClientDetailView`
-- `GET /clients/<id>/edit/` → `ClientUpdateView`
-- `GET /clients/<id>/delete/` → `ClientDeleteView`
+- `GET /clients/` → `ClientListView` — список клиентов
+- `GET /clients/create/` → `ClientCreateView` — форма создания
+- `POST /clients/create/` → `ClientCreateView` — создание
+- `GET /clients/<id>/` → `ClientDetailView` — детальная карточка
+- `GET /clients/<id>/edit/` → `ClientUpdateView` — форма редактирования
+- `POST /clients/<id>/edit/` → `ClientUpdateView` — сохранение
+- `GET /clients/<id>/delete/` → `ClientDeleteView` — подтверждение удаления
+- `POST /clients/<id>/delete/` → `ClientDeleteView` — удаление
 
-#### Список клиентов (`ClientListView`, `crm/client_list.html`)
+#### Список клиентов (`ClientListView`, `crm/clients/list.html`)
 
 Функциональность:
 
@@ -83,27 +103,31 @@
 
 В таблице отображаются:
 
-- имя;
-- мобильный телефон;
-- тип (бейдж “физ” / “юр”);
+- ФИО клиента;
+- телефон;
+- тип (бейдж "физ" / "юр");
 - компания;
 - адрес;
-- количество заказов клиента (`client.orders_count` или аналогичная аннотация);
+- количество заказов клиента (`orders_count`);
 - суммарный долг/переплата (`client.total_duty`);
-- кнопки действий (просмотр / редактирование / удаление).
+- кнопки управления (просмотр / редактирование / удаление).
+
+![Список клиентов](../docs/screenshots/7.png)
 
 #### Создание / редактирование / удаление
 
 - `ClientCreateView` / `ClientUpdateView` используют `ClientForm` и общий шаблон `crm/create.html`.
 - После создания — редирект на `/clients/`.
 - После редактирования — редирект на страницу просмотра клиента (`/clients/<id>/`).
-- `ClientDeleteView` использует шаблон `crm/client_confirm_delete.html` и после удаления редиректит на `/clients/`.
+- `ClientDeleteView` использует шаблон `crm/clients/delete.html` и после удаления редиректит на `/clients/`.
 
 Форма `ClientForm`:
 
 - валидирует телефон по маске `+7XXXXXXXXXX`;
 - проверяет уникальность телефона (с пользовательским сообщением);
-- валидация “у юр. лиц `company` обязательна” реализована на уровне модели и сериализатора, так что правило едино и для веба, и для API.
+- бизнес‑правило “у юр. лиц `company` обязательно” реализовано на уровне модели и валидатора, так что правило едино и для веба, и для API.
+
+![Создание клиента](../docs/screenshots/4.png)
 
 ---
 
@@ -111,17 +135,39 @@
 
 Маршруты:
 
-- `GET /orders/` → `OrderListView`
-- `GET /orders/create/` → `OrderCreateView`
-- `GET /orders/<id>/` → `OrderDetailView`
-- `GET /orders/<id>/edit/` → `OrderUpdateView`
-- `GET /orders/<id>/delete/` → `OrderDeleteView`
+- `GET /orders/` → `OrderListView` — список заказов
+- `GET /orders/create/` → `OrderCreateView` — форма создания заказа
+- `POST /orders/create/` → `OrderCreateView` — создание заказа
+- `GET /orders/<id>/` → `OrderDetailView` — детальная карточка заказа
+- `GET /orders/<id>/edit/` → `OrderUpdateView` — форма редактирования заказа
+- `POST /orders/<id>/edit/` → `OrderUpdateView` — сохранение изменений
+- `GET /orders/<id>/delete/` → `OrderDeleteView` — страница подтверждения удаления
+- `POST /orders/<id>/delete/` → `OrderDeleteView` — удаление заказа
 
-#### Список заказов (`OrderListView`, `crm/order_list.html`)
+#### Историчность цен на услуги (важно)
 
-Запрос:
+В проекте используется связующая модель `ServiceInOrder` (строки услуг заказа).  
+Это позволяет фиксировать цену услуги **в момент добавления в заказ**:
 
-- базовый QuerySet: `Order.objects.select_related('client')`.
+- базовая цена услуги хранится в `Service.amount` (справочник);
+- цена услуги в конкретном заказе хранится в `ServiceInOrder.amount`;
+- если потом изменить `Service.amount`, старые заказы **не пересчитаются**.
+
+#### Финансовая модель заказа
+
+Для заказа считаются:
+
+- `services_total` — стоимость услуг в заказе (с учётом возможной ручной коррекции `services_total_override`);
+- `purchases_total` — сумма покупок (по `Purchase.cost`) привязанных к заказу;
+- `total_amount = services_total + purchases_total` — итоговая сумма для клиента;
+- `duty = total_amount - advance - paid` — баланс (долг/переплата).
+
+#### Список заказов (`OrderListView`, `crm/orders/list.html`)
+
+Базовый QuerySet оптимизирован:
+- `select_related('client')`
+- `prefetch_related('service_lines__service')`
+- `prefetch_related('purchases')`
 
 Фильтры:
 
@@ -150,88 +196,166 @@
 
 - код заказа (`order.code`, например `TN-00001`);
 - дата создания;
-- клиент (ссылка на `client_detail`);
+- ФИО клиента (ссылка на `client_detail`);
 - телефон клиента;
 - принятое оборудование;
-- детали заказа;
-- список услуг (по многим — через `order.services.all`);
-- стоимость услуг (`total_price`);
+- описание неисправности;
+- услуги (через `order.service_lines`);
+- стоимость услуг (`services_total`);
+- стоимость покупок (`purchases_total`) 
+- общая сумма для клиента (`total_amount`);
 - аванс (`advance`);
-- долг клиента по заказу (`duty`);
+- оплата (`paid`);
+- долг/переплата (`duty`);
 - статус (`get_status_display()`);
 - действия (просмотр / редактирование / удаление).
+
+![Список заказов](../docs/screenshots/6.png)
 
 #### Создание / редактирование / удаление
 
 - `OrderCreateView` / `OrderUpdateView` используют `OrderForm` и общий шаблон `crm/create.html`.
+- Поле выбора клиента — Select2 (`js-client-select`).
+- Поле выбора услуг — Select2 (`js-services-select`) с поиском и лимитом выбора.
+- Поле `services_total_override` ("Стоимость услуг") можно вручную скорректировать (скидка/коррекция стоимости услуг).
 - После создания — редирект на `/orders/`.
 - После редактирования — редирект на страницу просмотра заказа (`/orders/<id>/`).
-- `OrderDeleteView` использует шаблон `crm/order_confirm_delete.html` и после удаления редиректит на `/orders/`.
+- `OrderDeleteView` использует шаблон `crm/orders/delete.html` и после удаления редиректит на `/orders/`.
 
-Форма `OrderForm`:
-
-- поля: клиент, оборудование, детали, услуги (множественный выбор), аванс, статус;
-- клиент — `<select>` с классом `js-client-select` (удобно подключать JS‑поиск по клиентам);
-- `advance` — числовое поле с `min=0`, `step=0.01`.
+![Создание заказа](../docs/screenshots/3.png)
 
 ---
-
 ### Услуги
+
+Раздел предназначен для ведения справочника услуг сервисного центра. Услуги используются в заказах и влияют на расчёт `services_total`.
 
 Маршруты:
 
-- `GET /services/` → `ServiceListView`
-- `GET /services/create/` → `ServiceCreateView`
-- `GET /services/<id>/edit/` → `ServiceUpdateView`
-- `POST /services/<id>/delete/` → `ServiceDeleteView`  
-  (`http_method_names = ('post',)` — удаление только POST‑ом).
+- `GET /services/` → `ServiceListView` — список услуг
+- `GET /services/create/` → `ServiceCreateView` — форма создания услуги
+- `POST /services/create/` → `ServiceCreateView` — создание услуги
+- `GET /services/<id>/edit/` → `ServiceUpdateView` — форма редактирования услуги
+- `POST /services/<id>/edit/` → `ServiceUpdateView` — сохранение изменений
+- `GET /services/<id>/delete/` → `ServiceDeleteView` — подтверждение удаления
+- `POST /services/<id>/delete/` → `ServiceDeleteView` — удаление
 
 Возможности:
 
 - просмотр списка услуг с указанием категории и стоимости;
+- фильтр по категории и поиск по названию услуги в пользовательском интерфейсе;
 - создание/редактирование услуг через `ServiceForm`;
-- фильтрация по категории в админке (в пользовательском интерфейсе — простой список).
+- защита от удаления услуги, которая используется в заказах (обрабатывается `ProtectedError`).
 
-`ServiceForm`:
+![Список услуг](../docs/screenshots/2.png)
 
-- поля: категория, наименование услуги, базовая стоимость;
-- проверка уникальности имени услуги с понятным сообщением об ошибке.
+#### Категории услуг
+
+Категории создаются в админке Django и используются для группировки услуг.
+У категории есть:
+- `title` — название
+- `slug` — уникальный идентификатор (удобен для фильтрации).
+
+#### Использование услуг в заказах
+
+В заказе можно выбрать набор услуг (выполненные работы). На основе выбранных услуг:
+- фиксируется стоимость каждой услуги в заказе (`ServiceInOrder.amount`);
+- рассчитывается `services_total` (с учётом `services_total_override`, если задан).
+
+#### Создание / редактирование / удаление
+
+- `GET /services/create/` → `ServiceCreateView` — форма создания
+- `GET /services/<id>/edit/` → `ServiceUpdateView` — форма редактирования
+
+Форма (`ServiceForm`) позволяет:
+- выбрать **категорию** услуги;
+- задать **уникальное имя** услуги;
+- указать **базовую стоимость** (decimal).
+
+Валидация:
+- `service_name` уникально (при попытке создать дубликат будет ошибка).
+
+![Создание услуги](../docs/screenshots/1.png)
+
+Удаление:
+- выполняется через страницу подтверждения (`GET`) и подтверждение (`POST`);
+- если услуга **используется в заказах**, удаление невозможно (срабатывает
+  `ProtectedError` из‑за `on_delete=PROTECT` в `ServiceInOrder`), пользователю
+  выводится сообщение об ошибке и выполняется редирект на список услуг.
 
 ---
 
-### Покупки запчастей
+### Покупки (запчасти / ПО)
 
 Маршруты:
 
-- `GET /purchases/` → `PurchaseListView`
-- `GET /purchases/create/` → `PurchaseCreateView`
-- `GET /purchases/<id>/` → `PurchaseDetailView`
-- `GET /purchases/<id>/edit/` → `PurchaseUpdateView`
-- `GET /purchases/<id>/delete/` → `PurchaseDeleteView`
+- `GET /purchases/` → `PurchaseListView` — список покупок
+- `GET /purchases/create/` → `PurchaseCreateView` — форма создания покупки
+- `POST /purchases/create/` → `PurchaseCreateView` — создание покупки
+- `GET /purchases/<id>/` → `PurchaseDetailView` — детальная карточка покупки
+- `GET /purchases/<id>/edit/` → `PurchaseUpdateView` — форма редактирования
+- `POST /purchases/<id>/edit/` → `PurchaseUpdateView` — сохранение изменений
+- `GET /purchases/<id>/delete/` → `PurchaseDeleteView` — подтверждение удаления
+- `POST /purchases/<id>/delete/` → `PurchaseDeleteView` — удаление
 
-#### Список покупок (`PurchaseListView`, `crm/purchase_list.html`)
+Возможности:
+- покупка может быть привязана к заказу или быть “без заказа”;
+- хранится магазин, описание и **стоимость покупки** (`cost`);
+- установка статуса покупки (ожидается поставка / получено / установлено);
+- фильтр по магазину и поиск по деталям покупки и номеру заказа;
+- просмотр списка покупок и детальной карточки;
+- редактирование и удаление записи.
+
+#### Список покупок (`PurchaseListView`, `crm/purchases/list.html`)
 
 - Базовый QuerySet: `Purchase.objects.select_related('order__client')`.
 - Пагинация через `BaseListView`.
 
-Статистика:
+Фильтры/поиск:
+- фильтр по магазину (`store`);
+- поиск по деталям покупки (`detail`) и по номеру заказа (`order__number`).
 
-- `total_purchases` — общее количество покупок.
-- `physical_amount_purchase` — количество покупок, привязанных к заказам клиентов‑физлиц.
-- `legal_amount_purchase` — то же для юр. лиц.
+Статистика (по текущей выборке):
+- `total_purchases` — общее количество покупок;
+- `physical_amount_purchase` — покупок по заказам клиентов‑физ.лиц;
+- `legal_amount_purchase` — покупок по заказам клиентов‑юр.лиц;
+- `without_order_purchase` — покупок без привязки к заказу.
 
-(Фильтров/поиска в текущей версии нет — только статистика и список.)
+![Список покупок](../docs/screenshots/9.png)
 
-#### CRUD
+#### Создание / редактирование / удаление
 
 - `PurchaseCreateView` / `PurchaseUpdateView` используют `PurchaseForm`.
-- После сохранения редирект на `/purchases/` или `/purchases/<id>/` (для обновления).
-- `PurchaseDeleteView` использует шаблон `crm/purchase_confirm_delete.html` и после удаления редиректит на `/purchases/`.
+- Поле выбора заказа использует Select2 (`js-order-select`) для удобного поиска по списку заказов.
+- После сохранения — редирект на `/purchases/` или `/purchases/<id>/` (для обновления).
+- `PurchaseDeleteView` использует шаблон `crm/purchases/delete.html` и после удаления редиректит на `/purchases/`.
+
+![Создание покупки](../docs/screenshots/5.png)
 
 `PurchaseForm`:
+- поля: заказ (опционально), магазин, детали покупки, стоимость (`cost`), статус.
 
-- поля: заказ (опционально), магазин, детали покупки, статус (`awaiting_receipt`, `received`, `installed`);
-- поле `detail` — `Textarea` с плейсхолдером для подробного описания покупки.
+![Удаление покупки](../docs/screenshots/22.png)
+
+---
+### Страница "О сервисе" / руководство пользователя
+
+- URL: `GET /about/`
+- Доступ: только авторизованным пользователям
+- Содержит: описание разделов CRM, статусов заказов и покупок, подсказки по работе
+
+![Страница о сервисе](../docs/screenshots/10.png)
+
+---
+
+## Пагинация
+
+Все списки используют общий include:
+
+- `templates/includes/paginator.html`
+
+Пагинация:
+- по умолчанию `QUANTITY_ON_PAGE` элементов на страницу (через `BaseListView`);
+- для услуг используется отдельный лимит `SERVICES_LIMIT_ON_PAGE`.
 
 ---
 
@@ -239,7 +363,7 @@
 
 В [`base_views.py`](base_views.py):
 
-- `BaseListView(LoginRequiredMixin, ListView)` — общий класс для всех списков (пагинация `QUANTITY_ON_PAGE`).
+- `BaseListView(LoginRequiredMixin, ListView)` — общий класс для всех списков (пагинация).
 - `BaseCreateView` / `BaseUpdateView`:
   - добавляют сообщения об успехе (`SuccessMessageMixin`);
   - используют общий шаблон `crm/create.html`;

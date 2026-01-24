@@ -3,6 +3,7 @@
 from django.urls import path
 
 from .views import (
+    AboutView,
     ClientCreateView,
     ClientDeleteView,
     ClientDetailView,
@@ -87,5 +88,10 @@ urlpatterns = [
         'purchases/<int:pk>/delete/',
         PurchaseDeleteView.as_view(),
         name='purchase_delete',
+    ),
+    path(
+        'about/',
+        AboutView.as_view(),
+        name='about',
     ),
 ]

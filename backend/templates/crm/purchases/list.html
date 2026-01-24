@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+{% block title %}Список покупок{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Список покупок</h2>
+    <a href="{% url 'purchase_create' %}" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Добавить покупку
+    </a>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">{{ total_purchases }}</h5>
+          <p class="card-text">Всего покупок</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">{{ physical_amount_purchase }}</h5>
+          <p class="card-text">Покупок для физ. лиц</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h5 class="card-title">{{ legal_amount_purchase }}</h5>
+          <p class="card-text">Покупок для юр. лиц</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-secondary">
+        <div class="card-body">
+          <h5 class="card-title">{{ without_order_purchase }}</h5>
+          <p class="card-text">Покупок без заказа</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0">Фильтр и поиск</h6>
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Магазин</label>
+          <select name="store" class="form-select">
+            <option value="">Все магазины</option>
+            {% for store in stores %}
+              <option value="{{ store }}"
+                {% if current_filters.store == store %}selected{% endif %}>
+                {{ store }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Поиск</label>
+          <input type="text"
+                name="search"
+                class="form-control"
+                placeholder="Номер заказа, описание товара..."
+                value="{{ current_filters.search }}">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100">Поиск</button>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <a href="{% url 'purchase_list' %}"
+            class="btn btn-outline-secondary w-100">
+            Сбросить
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">Покупки</h5>
+    </div>
+    <div class="card-body">
+      {% if purchases %}
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>К заказу</th>
+                <th>Дата</th>
+                <th>Магазин</th>
+                <th>Описание товара</th>
+                <th>Стоимость</th>
+                <th>Статус</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for purchase in purchases %}
+                <tr>
+                  <td class="text-nowrap">
+                    {% if purchase.order %}
+                      <a href="{% url 'order_detail' purchase.order.pk %}" class="text-decoration-none">
+                        {{ purchase.order.code }}
+                      </a>
+                    {% endif %}
+                  </td>
+                  <td>{{ purchase.create|date:"d.m.Y" }}</td>
+                  <td>{{ purchase.store }}</td>
+                  <td>{{ purchase.detail }}</td>
+                  <td class="text-nowrap">{{ purchase.cost }} ₽</td>
+                  <td>{{ purchase.get_status_display }}</td>
+                  <td>
+                    <div class="btn-group" role="group" aria-label="Basic outlined example">
+                      <a href="{% url 'purchase_detail' purchase.pk %}" class="btn btn-primary" title="Просмотр">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a href="{% url 'purchase_edit' purchase.pk %}" class="btn btn-warning" title="Редактировать">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <a href="{% url 'purchase_delete' purchase.pk %}" class="btn btn-danger" title="Удалить">
+                        <i class="fas fa-trash"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% include "includes/paginator.html" %}
+      {% else %}
+        <div class="text-center py-4">
+          <i class="fas fa-users fa-3x text-muted mb-3"></i>
+          <h5>Список покупок пуст</h5>
+          <p class="text-muted">Добавьте первую покупку, чтобы начать работу</p>
+          <a href="{% url 'purchase_create' %}" class="btn btn-primary">Добавить покупку</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -120,6 +120,7 @@ def create_crm_orders_and_purchases():
         accepted_equipment='Ноутбук Lenovo',
         detail='Не включается',
         advance=Decimal('300.00'),
+        paid=Decimal('0.00'),
         status='in_working',
     )
     order1.services.set([service1, service2])
@@ -130,6 +131,7 @@ def create_crm_orders_and_purchases():
         accepted_equipment='Монитор Samsung',
         detail='Мерцает подсветка',
         advance=Decimal('0.00'),
+        paid=Decimal('200.00'),
         status='completed',
     )
     order2.services.set([service1])
@@ -140,6 +142,7 @@ def create_crm_orders_and_purchases():
         accepted_equipment='Принтер HP',
         detail='Застревает бумага',
         advance=Decimal('200.00'),
+        paid=Decimal('0.00'),
         status='under_approval',
     )
     order3.services.set([])
@@ -148,25 +151,29 @@ def create_crm_orders_and_purchases():
         order=order1,
         store='DNS',
         detail='Жёсткий диск 1Тб',
-        status='awaiting_receipt',
+        cost=Decimal('5000.00'),
+        status='delivery_expected',
     )
     purchase2 = Purchase.objects.create(
         order=order1,
         store='Citilink',
         detail='Память DDR4 8Гб',
+        cost='4000',
         status='received',
     )
     purchase3 = Purchase.objects.create(
         order=order2,
         store='DNS',
         detail='Шлейф матрицы',
+        cost='1000',
         status='installed',
     )
     purchase_orphan = Purchase.objects.create(
         order=None,
         store='DNS',
         detail='Не привязано к заказу',
-        status='awaiting_receipt',
+        cost=Decimal('0.00'),
+        status='delivery_expected',
     )
 
     return {

@@ -2,9 +2,11 @@
 
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q, Sum
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from sequences import get_next_value
 
 from .constants import (
@@ -30,8 +32,6 @@ from .constants import (
 )
 from .validators import phone_validator, validate_company_for_legal
 
-User = get_user_model()
-
 
 class EntityType(models.TextChoices):
     """Выбор вида клиента."""
@@ -41,10 +41,10 @@ class EntityType(models.TextChoices):
 
 
 class Client(models.Model):
-    """Класс создания клиента."""
+    """Модель клиента."""
 
     client_name = models.CharField(
-        verbose_name='Имя клиента', max_length=MAX_LENGTH_NAME_CLIENT
+        verbose_name='Клиент', max_length=MAX_LENGTH_NAME_CLIENT
     )
     mobile_phone = models.CharField(
         verbose_name='Мобильный телефон',
@@ -56,7 +56,7 @@ class Client(models.Model):
     entity_type = models.CharField(
         verbose_name='Тип лица',
         choices=EntityType.choices,
-        default=EntityType.UL,
+        default=EntityType.FL,
         max_length=MAX_LENGTH_ENTITY_TYPE,
     )
     company = models.CharField(
@@ -116,16 +116,24 @@ class OrderQuerySet(models.QuerySet):
     """Дополнительные агрегаты для заказов."""
 
     def total_duty(self) -> Decimal:
-        """Общий баланс по выбранным заказам.
-
-        > 0 — клиенты в сумме должны нам,
-        < 0 — в сумме переплата.
-        """
-        qs = self.annotate(services_sum=Sum('services__amount'))
+        """Общий баланс по заказам (услуги + покупки) без раздувания сумм."""
+        qs = self.prefetch_related('service_lines', 'purchases')
         total = Decimal('0.00')
-        for o in qs:
-            services_total = o.services_sum or Decimal('0.00')
-            total += services_total - o.advance
+        for order in qs:
+            services_sum = sum(
+                (line.amount or Decimal('0.00'))
+                for line in order.service_lines.all()
+            )
+            purchases_sum = sum(
+                (p.cost or Decimal('0.00')) for p in order.purchases.all()
+            )
+            if order.services_total_override is not None:
+                services_total = order.services_total_override
+            else:
+                services_total = services_sum
+            total += (
+                services_total + purchases_sum - order.advance - order.paid
+            )
         return total
 
 
@@ -159,24 +167,40 @@ class Order(models.Model):
     accepted_equipment = models.CharField(
         verbose_name='Принятое оборудование',
         max_length=MAX_LENGTH_COMPONENT_FIELD,
-        help_text='Наименование оборудования',
     )
     detail = models.CharField(
-        verbose_name='Детали заказа',
+        verbose_name='Описание неисправности',
         max_length=MAX_LENGTH_COMPONENT_DETAIL,
-        help_text='Описание неисправности',
     )
     services = models.ManyToManyField(
         'Service',
+        through='ServiceInOrder',
         verbose_name='Услуги',
         related_name='orders',
         blank=True,
     )
+    services_total_override = models.DecimalField(
+        verbose_name='Услуги, ₽',
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text='Можно изменить вручную (скидка)',
+    )
     advance = models.DecimalField(
-        verbose_name='Аванс',
+        verbose_name='Аванс, ₽',
         max_digits=MONEY_MAX_DIGITS,
         decimal_places=MONEY_DECIMAL_PLACES,
         default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    paid = models.DecimalField(
+        verbose_name='Оплачено, ₽',
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
     )
     status = models.CharField(
         verbose_name='Статус заказа',
@@ -220,15 +244,36 @@ class Order(models.Model):
         return f'{ORDER_CODE_PREFIX}-{self.number:0{ORDER_CODE_PAD}d}'
 
     @property
-    def total_price(self) -> Decimal:
-        """Общая стоимость услуг в заказе."""
-        agg = self.services.aggregate(total=Sum('amount'))
+    def services_base_total(self) -> Decimal:
+        """Автоматическая сумма услуг по снимкам (история цен)."""
+        return self.service_lines.aggregate(total=Sum('amount'))[
+            'total'
+        ] or Decimal('0.00')
+
+    @property
+    def services_total(self) -> Decimal:
+        """Стоимость услуг для расчётов/показа: ручная или автоматическая."""
+        return (
+            self.services_total_override
+            if self.services_total_override is not None
+            else self.services_base_total
+        )
+
+    @property
+    def purchases_total(self) -> Decimal:
+        """Общая стоимость покупок."""
+        agg = self.purchases.aggregate(total=Sum('cost'))
         return agg['total'] or Decimal('0.00')
+
+    @property
+    def total_amount(self) -> Decimal:
+        """Итого для клиента: услуги (с учётом override) + покупки."""
+        return self.services_total + self.purchases_total
 
     @property
     def duty(self) -> Decimal:
         """Высчитвает долг клиента, либо переплату."""
-        return self.total_price - self.advance
+        return self.total_amount - self.advance - self.paid
 
 
 class Category(models.Model):
@@ -251,7 +296,7 @@ class Category(models.Model):
 
 
 class Service(models.Model):
-    """Модель услуг."""
+    """Модель услуги."""
 
     category = models.ForeignKey(
         Category,
@@ -269,6 +314,7 @@ class Service(models.Model):
         max_digits=MONEY_MAX_DIGITS,
         decimal_places=MONEY_DECIMAL_PLACES,
         default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
     )
 
     class Meta:
@@ -283,16 +329,95 @@ class Service(models.Model):
         return self.service_name
 
 
+class ServiceInOrder(models.Model):
+    """Связующая модель 'Услуга в заказе`.
+
+    Реализует связь "многие-ко-многим" между заказами и услугами с
+    дополнительными атрибутами. Позволяет хранить индивидуальную стоимость
+    услуги для каждого заказа на момемент создания.
+    """
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='service_lines',
+        verbose_name='Заказ',
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.PROTECT,
+        related_name='order_lines',
+        verbose_name='Услуга',
+    )
+    amount = models.DecimalField(
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        verbose_name='Стоимость услуги в заказе',
+        validators=[MinValueValidator(Decimal('0.00'))],
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        """Метаданные модели ServiceInOrder."""
+
+        verbose_name = 'Услуга в заказе'
+        verbose_name_plural = 'Услуги в заказах'
+        ordering = ('order', 'service')
+        constraints = (
+            models.UniqueConstraint(
+                fields=('order', 'service'),
+                name='uniq_service_per_order',
+            ),
+        )
+
+    def __str__(self) -> str:
+        """Строковое представление записи."""
+        return (
+            f'{self.order.code}: {self.service.service_name} = {self.amount}'
+        )
+
+    def save(self, *args, **kwargs):
+        """Устанавливает стоимость из услуги, если amount не указан.
+
+        Фиксирует стоимость услуги на момент создания заказа,
+        обеспечивая сохранение исторических данных о ценах.
+        """
+        if self.amount is None and self.service_id:
+            self.amount = self.service.amount
+        return super().save(*args, **kwargs)
+
+
+@receiver(m2m_changed, sender=ServiceInOrder)
+def snapshot_service_amount(
+    sender, instance, action, pk_set, reverse, **kwargs
+):
+    """После добавления услуг в заказ — зафиксировать цену в ServiceInOrder."""
+    if reverse:
+        return
+    if action != 'post_add' or not pk_set:
+        return
+    lines = ServiceInOrder.objects.filter(
+        order=instance,
+        service_id__in=pk_set,
+        amount__isnull=True,
+    ).select_related('service')
+    for line in lines:
+        line.amount = line.service.amount
+    if lines:
+        ServiceInOrder.objects.bulk_update(lines, ['amount'])
+
+
 class PurchaseStatus(models.TextChoices):
     """Выбор статуса покупки."""
 
-    AWAITING_RECEIPT = 'awaiting_receipt', 'ожидает получения'
+    DELIVERY_EXPECTED = 'delivery_expected', 'ожидается поставка'
     RECEIVED = 'received', 'получено'
     INSTALLED = 'installed', 'установлено'
 
 
 class Purchase(models.Model):
-    """Модель для закупок запчастей."""
+    """Модель покупки (запчасть/ПО)."""
 
     order = models.ForeignKey(
         Order,
@@ -306,15 +431,22 @@ class Purchase(models.Model):
         auto_now_add=True, verbose_name='Дата создания'
     )
     store = models.CharField(
-        verbose_name="Наименование магазина", max_length=MAX_LENGTH_NAME_SHOP
+        verbose_name='Наименование магазина', max_length=MAX_LENGTH_NAME_SHOP
     )
     detail = models.CharField(
-        "Детали покупки", max_length=MAX_LENGTH_OF_DETAIL_SHOP
+        'Детали покупки', max_length=MAX_LENGTH_OF_DETAIL_SHOP
+    )
+    cost = models.DecimalField(
+        verbose_name='Стоимость покупки',
+        max_digits=MONEY_MAX_DIGITS,
+        decimal_places=MONEY_DECIMAL_PLACES,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
     )
     status = models.CharField(
         choices=PurchaseStatus.choices,
         verbose_name='Статус покупки',
-        default=PurchaseStatus.AWAITING_RECEIPT,
+        default=PurchaseStatus.DELIVERY_EXPECTED,
         max_length=MAX_LENGTH_PURCHASE_STATUS,
         db_index=True,
     )

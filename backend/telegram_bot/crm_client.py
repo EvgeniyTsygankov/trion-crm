@@ -18,7 +18,7 @@ from .logger import logger
 class CRMClientError(RuntimeError):
     """Базовый класс для всех ошибок клиента CRM-системы."""
 
-    default_message = "Ошибка CRM клиента"
+    default_message = 'Ошибка CRM клиента'
 
     def __init__(self, message: str | None = None):
         """Инициализирует исключение CRMClientError."""
@@ -28,19 +28,19 @@ class CRMClientError(RuntimeError):
 class CRMAuthError(CRMClientError):
     """Ошибка аутентификации/авторизации в CRM-системе."""
 
-    default_message = "Пользователь не авторизован"
+    default_message = 'Пользователь не авторизован'
 
 
 class RefreshTokenMissingError(CRMAuthError):
     """Ошибка отсутствия refresh-токена."""
 
-    default_message = "Refresh токен отсутствует"
+    default_message = 'Refresh токен отсутствует'
 
 
 class RefreshTokenInvalidError(CRMAuthError):
     """Ошибка недействительного refresh-токена."""
 
-    default_message = "Refresh токен недействителен"
+    default_message = 'Refresh токен недействителен'
 
 
 def get_tokens(username, password):

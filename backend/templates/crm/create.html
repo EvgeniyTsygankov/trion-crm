@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load django_bootstrap5 %}
 {% block title %}
   {% if form.instance.pk %}
@@ -11,6 +12,7 @@
   {{ block.super }}
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
         rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/select2_custom.css' %}">
 {% endblock %}
 {% block content %}
   <div class="col d-flex justify-content-center">
@@ -48,13 +50,35 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
-    $(document).ready(function() {
-      $('.js-client-select').select2({
-        width: '100%',
-        placeholder: 'Выберите клиента',
-        allowClear: true,
-        language: 'ru'
-      });
+  $(document).ready(function () {
+    $('.js-client-select').select2({
+      width: '100%',
+      placeholder: 'Выберите клиента',
+      allowClear: true,
+      language: 'ru'
     });
-  </script>
+
+    const $services = $('.js-services-select').select2({
+      width: '100%',
+      placeholder: 'До 10 услуг',
+      closeOnSelect: false,
+      maximumSelectionLength: 10,
+      language: 'ru'
+    });
+
+    $services.each(function () {
+      const s2 = $(this).data('select2');
+      if (s2 && s2.$container) {
+        s2.$container.addClass('select2-services');
+      }
+    });
+
+    $('.js-order-select').select2({
+      width: '100%',
+      placeholder: 'Выберите заказ',
+      allowClear: true,
+      language: 'ru'
+    });
+  });
+</script>
 {% endblock %}

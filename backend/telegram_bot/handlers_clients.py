@@ -17,7 +17,7 @@ from .bot import (
     get_crm_or_ask_auth,
     show_main_menu,
 )
-from .constants import ENTITY_LABELS
+from .constants import ENTITY_LABELS, SERVICE_BUTTONS
 from .keyboards import clients_keyboard
 
 
@@ -26,7 +26,8 @@ def clients_menu_command(message):
     """Обрабатывает кнопку 'Клиенты'.
 
     Проверяет авторизацию, сбрасывает состояния других диалогов и
-    запрашивает номер телефона клиента. Показывает клавиатуру с
+    запрашивает информацию для поиска клиента по: ФИО, номеру телефона,
+    наименованию оборудования. Показывает клавиатуру с
     кнопками 'Меню' и 'Авторизация'.
     """
     chat_id = message.chat.id
@@ -37,19 +38,21 @@ def clients_menu_command(message):
     clients_state[chat_id] = {'stage': 'await_phone'}
     bot.send_message(
         chat_id,
-        'Введите номер телефона клиента (в формате +7999...).',
+        'Поиск по номеру телефона клиента (в формате +7999...) /\n'
+        'номеру заказа (пример: 101) /\n'
+        'наименованию оборудования (пример: Asus ROG)',
         reply_markup=clients_keyboard(),
     )
 
 
 @bot.message_handler(
-    func=lambda m: clients_state.get(m.chat.id, {}).get('stage')
-    == 'await_phone'
+    func=lambda m: (
+        clients_state.get(m.chat.id, {}).get('stage') == 'await_phone'
+        and (m.text not in SERVICE_BUTTONS)
+    )
 )
 def clients_by_phone(message):
-    """Ищет и отображает клиента по номеру телефона."""
-    if message.text in {'Меню', 'Авторизация', 'Клиенты', 'Заказы', 'Покупки'}:
-        return
+    """Ищет и отображает клиента по номеру телефона, заказа, оборудования."""
     chat_id = message.chat.id
     phone = message.text.strip()
     try:
@@ -60,7 +63,9 @@ def clients_by_phone(message):
         if clients is None:
             return
         if not clients:
-            bot.send_message(chat_id, 'Клиенты с таким телефоном не найдены')
+            bot.send_message(
+                chat_id, 'Клиенты по текущей информации отсутствуют'
+            )
             show_main_menu(chat_id)
             return
         client = clients[0]

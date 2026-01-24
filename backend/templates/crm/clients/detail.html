@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Детали клиента: {{ client.client_name }}{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h5>Информация о клиенте</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>ФИО: </strong>{{ client.client_name }}</p>
+      <p><strong>Телефон: </strong>{{ client.mobile_phone }}</p>
+      <p><strong>Тип: </strong>{{ client.get_entity_type_display }}</p>
+      {% if client.company %}
+        <p class="mb-1"><strong>Компания: </strong>{{ client.company }}</p>
+      {% endif %}
+      <p><strong>Адрес: </strong>{{ client.address }}</p>
+      <p><strong>Заказов: </strong>{{ client.orders.count }}</p>
+      <p><strong>Долг: </strong>{{ client.total_duty }} ₽</p>
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div class="card-header">
+        <h6>Заказы клиента</h6>
+    </div>
+    <div class="card-body">
+      {% for order in client.orders.all %}
+          <div class="border-bottom pb-2 mb-2">
+            <p><strong>Заказ: {{ order.code }}</strong></p>
+            <p>Оборудование: {{ order.accepted_equipment }}</p>
+            <p>Описание неисправности: {{ order.detail }}</p>
+            <p>Выполняемые работы:
+              {% if order.service_lines.exists %}
+                {% for line in order.service_lines.all %}
+                  {{ line.service.service_name }} ({{ line.amount }} ₽)
+                  {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              {% else %}
+                не указаны
+              {% endif %}
+            </p>
+            <p>Статус: {{ order.get_status_display }}</p>
+          </div>
+      {% empty %}
+          <p>У клиента пока нет заказов</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div class="card-header">
+      <h6>Комплектующие по заказам клиента</h6>
+    </div>
+  <div class="card-body">
+    {% for order in client.orders.all %}
+      {% if order.purchases.exists %}
+        <div class="border-bottom pb-2 mb-2">
+          <p><strong>Заказ {{ order.code }}</strong></p>
+          {% for p in order.purchases.all %}
+            <p class="mb-1">
+              {{ p.create|date:"d.m.Y" }} — {{ p.store }}: {{ p.detail }}
+              ({{ p.cost }} ₽, {{ p.get_status_display }})
+            </p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+    {% if not client.orders.all|length %}
+      <p>У клиента пока нет оформленного товара</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

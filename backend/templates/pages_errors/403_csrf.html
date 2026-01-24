@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Ошибка CSRF{% endblock %}
+{% block content %}
+  <div class="container-fluid py-5 text-center">
+    <h1 class="display-5 mb-2">403</h1>
+    <p class="lead mb-1">Запрос отклонён (CSRF-защита)</p>
+    <p class="text-muted">Обновите страницу и повторите действие.</p>
+    <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+      <button class="btn btn-outline-secondary" type="button" onclick="location.reload()">
+        Обновить
+      </button>
+      <a class="btn btn-primary" href="{% url 'home' %}">На главную</a>
+    </div>
+  </div>
+{% endblock %}

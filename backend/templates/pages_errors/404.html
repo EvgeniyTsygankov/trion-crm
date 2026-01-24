@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Страница не найдена{% endblock %}
+{% block content %}
+  <div class="container-fluid py-5">
+    <div class="text-center">
+      <h1 class="display-5 mb-2">404</h1>
+      <p class="lead mb-1">Страница не найдена</p>
+      <p class="text-muted">
+        Проверьте адрес или перейдите в один из разделов CRM.
+      </p>
+      <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+        <a class="btn btn-primary" href="{% url 'home' %}">На главную</a>
+        <a class="btn btn-outline-secondary" href="{% url 'order_list' %}">Заказы</a>
+        <a class="btn btn-outline-secondary" href="{% url 'client_list' %}">Клиенты</a>
+        <a class="btn btn-outline-secondary" href="{% url 'purchase_list' %}">Покупки</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

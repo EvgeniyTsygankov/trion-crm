@@ -1,17 +1,20 @@
 """Представления (ViewSets) для CRM системы.
 
 Этот модуль содержит API endpoints для работы с основными сущностями CRM:
-клиентами, заказами и покупками. Используется Django REST Framework
-для создания RESTful API с автоматической документацией.
+клиентами, заказами и покупками.
 """
 
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.response import Response
 
 from crm.models import Client, Order, Purchase
-
-from .serializers import ClientSerializer, OrderSerializer, PurchaseSerializer
+from crm.serializers import (
+    ClientSerializer,
+    OrderSerializer,
+    PurchaseSerializer,
+)
 
 
 class ClientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -33,44 +36,49 @@ class ClientViewSet(viewsets.ReadOnlyModelViewSet):
         """Запрещаем /api/clients/ без параметра ?search=."""
         if not request.query_params.get('search'):
             return Response(
-                {"detail": "Параметр ?search= обязателен."},
+                {'detail': 'Параметр ?search= обязателен.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().list(request, *args, **kwargs)
 
 
 class OrderViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для работы с заказами в режиме только для чтения.
-
-    Предоставляет следующие API endpoints:
-    - GET /api/orders/ - список всех заказов
-    - GET /api/orders/{id}/ - детальная информация о заказе
-
-    Особенности:
-    - оптимизированные запросы к БД через select_related и prefetch_related;
-    - поиск по описанию принятого оборудования и номеру телефона клиента и
-    номеру заказа (пример: 101) ;
-    - фильтрация по статусу заказа;
-    - сортировка по идентификатору заказа (id), по умолчанию — по убыванию.
-    """
+    """ViewSet для работы с заказами в режиме только для чтения."""
 
     queryset = Order.objects.select_related('client').prefetch_related(
-        'services', 'services__category'
+        'service_lines__service__category',
+        'purchases',
     )
     serializer_class = OrderSerializer
     filter_backends = (
         DjangoFilterBackend,
-        filters.SearchFilter,
         filters.OrderingFilter,
     )
     filterset_fields = ('status',)
-    search_fields = (
-        'accepted_equipment',
-        'client__mobile_phone',
-        'number',
-    )
     ordering_fields = ('id',)
     ordering = ('-id',)
+
+    def get_queryset(self):
+        """Возвращает queryset, опционально применяя поиск по ?search=.
+
+        Поддерживаем:
+        - поиск по accepted_equipment (icontains)
+        - поиск по телефону клиента (icontains)
+        - поиск по номеру заказа (точное совпадение number=int(digits)),
+          если в строке поиска удаётся выделить цифры.
+        """
+        qs = super().get_queryset()
+        search = (self.request.query_params.get('search') or '').strip()
+        if not search:
+            return qs
+        q = Q(accepted_equipment__icontains=search) | Q(
+            client__mobile_phone__icontains=search
+        )
+        digits = ''.join(ch for ch in search if ch.isdigit())
+        if digits:
+            q |= Q(number=int(digits))
+
+        return qs.filter(q)
 
 
 class PurchaseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -87,7 +95,7 @@ class PurchaseViewSet(viewsets.ReadOnlyModelViewSet):
     - сортировка по идентификатору покупки (id), по умолчанию — по убыванию.
     """
 
-    queryset = Purchase.objects.select_related('order')
+    queryset = Purchase.objects.select_related('order__client')
     serializer_class = PurchaseSerializer
     filter_backends = (
         DjangoFilterBackend,

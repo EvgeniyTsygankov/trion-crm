@@ -65,10 +65,7 @@ class TestClientAPI(BaseAPITest):
         )
 
     def test_client_detail(self):
-        """Проверяет получение детальной информации о клиенте.
-
-        GET /api/clients/{id}/
-        """
+        """Проверяет получение детальной информации о клиенте."""
         resp = self.api.get(f'/api/clients/{self.client1.id}/')
         assert (
             resp.status_code == HTTPStatus.OK
@@ -80,10 +77,7 @@ class TestClientAPI(BaseAPITest):
         ), f'Номер телефона должен быть {self.client1.mobile_phone}'
 
     def test_client_search_by_phone(self):
-        """Проверяет поиск клиента по номеру телефона.
-
-        GET /api/clients/?search=...
-        """
+        """Проверяет поиск клиента по номеру телефона."""
         resp = self.api.get(
             '/api/clients/', {'search': self.client1.mobile_phone}
         )
@@ -109,10 +103,7 @@ class TestOrderAPI(BaseAPITest):
     """Тестирование операций чтения API заказов."""
 
     def setup_method(self):
-        """Подготовка перед каждым тестом.
-
-        Инициализирует API-клиент и создаёт тестовые данные.
-        """
+        """Подготовка перед каждым тестом."""
         self.setup_auth()
         self.data = create_crm_orders_and_purchases()
         self.client1 = self.data['client1']
@@ -126,10 +117,7 @@ class TestOrderAPI(BaseAPITest):
         self.teardown_auth()
 
     def test_order_list(self):
-        """Проверяет получение списка всех заказов.
-
-        GET /api/orders/
-        """
+        """Проверяет получение списка всех заказов."""
         resp = self.api.get('/api/orders/')
         assert (
             resp.status_code == HTTPStatus.OK
@@ -149,10 +137,7 @@ class TestOrderAPI(BaseAPITest):
         ), f'Заказ c id={self.order3.id} должен присутствовать в списке'
 
     def test_order_detail(self):
-        """Проверяет получение детальной информации о заказе.
-
-        GET /api/orders/{id}/
-        """
+        """Проверяет получение детальной информации о заказе."""
         order = self.order1
         resp = self.api.get(f'/api/orders/{order.id}/')
         assert resp.status_code == HTTPStatus.OK, (
@@ -162,16 +147,21 @@ class TestOrderAPI(BaseAPITest):
 
         data = resp.json()
 
-        # Основные поля
+        # --- Основные поля ---
         assert (
             data['id'] == order.id
         ), 'Поле id в ответе должно совпадать с id объекта в БД'
         assert (
-            data['number'] == order.number
-        ), 'Поле number в ответе должно совпадать с номером заказа в БД'
-        assert (
-            data['client'] == order.client.id
-        ), 'Поле client в ответе должно содержать id клиента из БД'
+            data['code'] == order.code
+        ), 'Поле code в ответе должно совпадать с вычисленным кодом заказа'
+        assert data['client_name'] == order.client.client_name, (
+            'Поле client_name в ответе должно совпадать с client_name '
+            'клиента в БД'
+        )
+        assert data['mobile_phone'] == order.client.mobile_phone, (
+            'Поле mobile_phone в ответе должно совпадать с mobile_phone '
+            'клиента в БД'
+        )
         assert (
             data['accepted_equipment'] == order.accepted_equipment
         ), 'Поле accepted_equipment в ответе должно совпадать с данными в БД'
@@ -179,21 +169,26 @@ class TestOrderAPI(BaseAPITest):
             data['detail'] == order.detail
         ), 'Поле detail в ответе должно совпадать с данными в БД'
 
-        # Вычисляемые поля
-        assert Decimal(data['total_price']) == order.total_price, (
-            'Поле total_price в ответе должно совпадать с рассчитанной '
+        # --- Вычисляемые поля ---
+        assert Decimal(data['services_total']) == order.services_total, (
+            'Поле services_total в ответе должно совпадать с рассчитанной '
             'суммой услуг заказа'
         )
-        assert Decimal(data['duty']) == order.duty, (
-            'Поле duty в ответе должно совпадать с рассчитанным долгом '
-            '(total_price - advance)'
+        assert Decimal(data['purchases_total']) == order.purchases_total, (
+            'Поле purchases_total в ответе должно совпадать с рассчитанной '
+            'суммой покупок заказа'
         )
-        assert (
-            data['code'] == order.code
-        ), 'Поле code в ответе должно совпадать с вычисленным кодом заказа'
+        assert Decimal(data['total_amount']) == order.total_amount, (
+            'Поле total_amount в ответе должно совпадать с рассчитанной '
+            'общей суммой (services_total + purchases_total)'
+        )
+        assert Decimal(data['duty']) == order.duty, (
+            'Поле duty в ответе должно совпадать с рассчитанным балансом '
+            '(total_amount - advance - paid)'
+        )
 
-        # Связанные услуги
-        assert len(data['services']) == order.services.count(), (
+        # --- Связанные услуги ---
+        assert len(data['services']) == order.service_lines.count(), (
             'Количество услуг в ответе должно совпадать с количеством '
             'связанных услуг в БД'
         )
@@ -205,11 +200,32 @@ class TestOrderAPI(BaseAPITest):
             self.data['service2'].service_name in service_names
         ), 'Услуга service2 должна присутствовать в списке услуг заказа'
 
-    def test_order_filter_by_status(self):
-        """Проверяет фильтрацию заказов по статусу.
+        # --- Вложенные покупки (вариант B) ---
+        assert 'purchases' in data, 'В ответе должно быть поле purchases'
+        assert len(data['purchases']) == order.purchases.count(), (
+            'Количество покупок в ответе должно совпадать с количеством '
+            'покупок заказа в БД'
+        )
 
-        GET /api/orders/?status=...
-        """
+        purchase_ids = {p['id'] for p in data['purchases']}
+        assert (
+            self.data['purchase1'].id in purchase_ids
+        ), 'purchase1 должна присутствовать в списке покупок заказа'
+        assert (
+            self.data['purchase2'].id in purchase_ids
+        ), 'purchase2 должна присутствовать в списке покупок заказа'
+
+        purchase1_id = self.data['purchase1'].id
+        purchase1 = next(
+            p for p in data['purchases'] if p['id'] == purchase1_id
+        )
+        assert purchase1['store'] == self.data['purchase1'].store
+        assert purchase1['detail'] == self.data['purchase1'].detail
+        assert Decimal(purchase1['cost']) == self.data['purchase1'].cost
+        assert purchase1['status'] == self.data['purchase1'].status
+
+    def test_order_filter_by_status(self):
+        """Проверяет фильтрацию заказов по статусу."""
         resp = self.api.get('/api/orders/', {'status': 'completed'})
         assert resp.status_code == HTTPStatus.OK, (
             'Статус ответа при фильтрации заказов по статусу "completed" '
@@ -225,30 +241,29 @@ class TestOrderAPI(BaseAPITest):
         ), 'Все заказы в ответе должны иметь статус "completed"'
 
     def test_order_post_not_allowed(self):
-        """Проверяет, что создание заказа запрещено (ReadOnlyModelViewSet).
-
-        POST /api/orders/
-        """
+        """Проверяет, что создание заказа запрещено."""
         resp = self.api.post('/api/orders/', {})
         assert resp.status_code == HTTPStatus.METHOD_NOT_ALLOWED, (
             'Метод POST должен быть запрещён для эндпоинта /api/orders/ '
             '(используется ReadOnlyModelViewSet)'
         )
 
+    def test_order_search_with_letters_and_digits_no_500(self):
+        """Регрессия: поиск по строке вида "MA2000" не должен давать 500."""
+        resp = self.api.get('/api/orders/', {'search': 'MA2000'})
+        assert resp.status_code == HTTPStatus.OK
 
+
+# --------- Покупки ---------
 @pytest.mark.django_db
 class TestPurchaseAPI(BaseAPITest):
     """Тестирование операций чтения API покупок."""
 
     def setup_method(self):
-        """Подготовка перед каждым тестом.
-
-        Инициализирует API-клиент и создаёт тестовые данные покупок.
-        """
+        """Подготовка перед каждым тестом."""
         self.setup_auth()
         self.data = create_crm_orders_and_purchases()
         self.order1 = self.data['order1']
-        self.order2 = self.data['order2']
         self.purchase1 = self.data['purchase1']
         self.purchase2 = self.data['purchase2']
         self.purchase3 = self.data['purchase3']
@@ -259,10 +274,7 @@ class TestPurchaseAPI(BaseAPITest):
         self.teardown_auth()
 
     def test_purchase_list(self):
-        """Проверяет получение списка всех покупок.
-
-        GET /api/purchases/
-        """
+        """Проверяет получение списка всех покупок."""
         resp = self.api.get('/api/purchases/')
         assert (
             resp.status_code == HTTPStatus.OK
@@ -286,10 +298,7 @@ class TestPurchaseAPI(BaseAPITest):
         )
 
     def test_purchase_detail(self):
-        """Проверяет получение детальной информации о покупке с заказом.
-
-        GET /api/purchases/{id}/
-        """
+        """Проверяет получение детальной информации о покупке с заказом."""
         purchase = self.purchase1
         order = purchase.order
 
@@ -305,27 +314,26 @@ class TestPurchaseAPI(BaseAPITest):
             data['id'] == purchase.id
         ), 'Поле id в ответе должно совпадать с id покупки в БД'
         assert (
-            data['order'] == order.id
-        ), 'Поле order в ответе должно содержать id связанного заказа'
-        assert (
             data['order_code'] == order.code
         ), 'Поле order_code в ответе должно содержать код связанного заказа'
-        assert data['store'] == purchase.store, (
-            'Поле store в ответе должно совпадать с наименованием магазина '
-            'в БД'
-        )
+        assert (
+            data['client_name'] == order.client.client_name
+        ), 'Поле client_name в ответе должно содержать имя клиента заказа'
+        assert (
+            data['store'] == purchase.store
+        ), 'Поле store в ответе должно совпадать с магазином в БД'
         assert (
             data['detail'] == purchase.detail
         ), 'Поле detail в ответе должно совпадать с деталями покупки в БД'
+        assert (
+            Decimal(data['cost']) == purchase.cost
+        ), 'Поле cost в ответе должно совпадать со стоимостью покупки в БД'
         assert (
             data['status'] == purchase.status
         ), 'Поле status в ответе должно совпадать со статусом покупки в БД'
 
     def test_purchase_detail_without_order(self):
-        """Проверяет получение детальной информации о покупке без заказа.
-
-        GET /api/purchases/{id}/
-        """
+        """Проверяет получение детальной информации о покупке без заказа."""
         purchase = self.purchase_orphan
 
         resp = self.api.get(f'/api/purchases/{purchase.id}/')
@@ -339,17 +347,14 @@ class TestPurchaseAPI(BaseAPITest):
             data['id'] == purchase.id
         ), 'Поле id в ответе должно совпадать с id покупки в БД'
         assert (
-            data['order'] is None
-        ), 'Для покупки без заказа поле order в ответе должно быть null'
-        assert (
             data['order_code'] is None
         ), 'Для покупки без заказа поле order_code в ответе должно быть null'
+        assert (
+            data['client_name'] is None
+        ), 'Для покупки без заказа поле client_name в ответе должно быть null'
 
     def test_purchase_filter_by_status(self):
-        """Проверяет фильтрацию покупок по статусу.
-
-        GET /api/purchases/?status=...
-        """
+        """Проверяет фильтрацию покупок по статусу."""
         resp = self.api.get('/api/purchases/', {'status': 'received'})
         assert resp.status_code == HTTPStatus.OK, (
             'Статус ответа при фильтрации покупок по статусу "received" '
@@ -365,10 +370,7 @@ class TestPurchaseAPI(BaseAPITest):
         ), 'Все покупки в ответе должны иметь статус "received"'
 
     def test_purchase_ordering(self):
-        """Проверяет сортировку покупок по идентификатору.
-
-        GET /api/purchases/?ordering=id
-        """
+        """Проверяет сортировку покупок по идентификатору."""
         resp = self.api.get('/api/purchases/', {'ordering': 'id'})
         assert (
             resp.status_code == HTTPStatus.OK
@@ -382,10 +384,7 @@ class TestPurchaseAPI(BaseAPITest):
         )
 
     def test_purchase_post_not_allowed(self):
-        """Проверяет, что создание покупки запрещено (ReadOnlyModelViewSet).
-
-        POST /api/purchases/
-        """
+        """Проверяет, что создание покупки запрещено."""
         resp = self.api.post('/api/purchases/', {})
         assert resp.status_code == HTTPStatus.METHOD_NOT_ALLOWED, (
             'Метод POST должен быть запрещён для эндпоинта /api/purchases/ '

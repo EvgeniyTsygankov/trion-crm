@@ -63,7 +63,7 @@
                 <th>Дата</th>
                 <th>Клиент</th>
                 <th>Оборудование</th>
-                <th>Детали заказа</th>
+                <th>Описание неисправности</th>
                 <th>Статус</th>
                 <th>Сумма</th>
               </tr>
@@ -81,7 +81,7 @@
                   <td>{{ order.accepted_equipment }}</td>
                   <td>{{ order.detail }}</td>
                   <td>{{ order.get_status_display }}</td>
-                  <td>{{ order.total_price }} ₽</td>
+                  <td>{{ order.services_total }} ₽</td>
                 </tr>
               {% endfor %}
             </tbody>

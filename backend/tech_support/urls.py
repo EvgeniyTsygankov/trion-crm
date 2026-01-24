@@ -3,8 +3,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import include, path
-from django.views.generic import TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -13,14 +13,17 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('django.contrib.auth.urls')),
+    path(
+        'auth/login/',
+        auth_views.LoginView.as_view(
+            template_name='registration/login.html',
+            redirect_authenticated_user=True,
+        ),
+        name='login',
+    ),
+    path('auth/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.jwt')),
-    path(
-        'about/',
-        TemplateView.as_view(template_name='pages/about.html'),
-        name='about',
-    ),
     path('api/', include('api.urls')),
     path('', include('crm.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -43,3 +46,7 @@ if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
     )
+
+handler403 = 'tech_support.error_views.permission_denied'
+handler404 = 'tech_support.error_views.page_not_found'
+handler500 = 'tech_support.error_views.server_error'

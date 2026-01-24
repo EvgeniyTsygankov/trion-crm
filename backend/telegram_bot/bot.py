@@ -102,7 +102,7 @@ def send_purchases(chat_id: int, status=None):
 
     Работает как общий хелпер для всех фильтров:
       - status=None               → все покупки;
-      - status='awaiting_receipt' → только «ожидает получения»;
+      - status='delivery_expected' → только «ожидает получения»;
       - status='received'         → только «получено»;
       - status='installed'        → только «установлено».
     При отсутствии покупок выводит сообщение и возвращает пользователя
@@ -118,7 +118,11 @@ def send_purchases(chat_id: int, status=None):
         if status is None:
             bot.send_message(chat_id, 'Покупок не найдено')
         else:
-            bot.send_message(chat_id, 'Покупок с таким статусом не найдено')
+            status_label: str = PURCHASE_STATUS_LABELS.get(status, status)
+            bot.send_message(
+                chat_id,
+                f'Покупки со статусом "{status_label}" отсутствуют',
+            )
             show_main_menu(chat_id)
         return
     for purchase in purchases[:MAX_PURCHASES_SHOWN]:
@@ -167,7 +171,7 @@ def format_order_message(order):
         if services
         else '-'
     )
-    total_price = order['total_price']
+    services_total = order['services_total']
     advance = order['advance']
     duty = order['duty']
     status = order['status']
@@ -179,7 +183,7 @@ def format_order_message(order):
         f'Принятое оборудование: {accepted_equipment},\n'
         f'Детали заказа: {detail},\n'
         f'Услуги: {service_names},\n'
-        f'Стоимость услуг: {total_price},\n'
+        f'Стоимость услуг: {services_total},\n'
         f'Аванс: {advance},\n'
         f'Долг клиента: {duty},\n'
         f'Статус: {status_label}\n'

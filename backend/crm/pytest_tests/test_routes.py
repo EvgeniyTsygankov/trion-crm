@@ -40,35 +40,35 @@ from crm.views import (
 
 # Маршруты, не требующие pk
 ROUTES_NO_PK = [
-    ("home", HomeView),
-    ("client_list", ClientListView),
-    ("client_create", ClientCreateView),
-    ("service_list", ServiceListView),
-    ("service_create", ServiceCreateView),
-    ("order_list", OrderListView),
-    ("order_create", OrderCreateView),
-    ("purchase_list", PurchaseListView),
-    ("purchase_create", PurchaseCreateView),
+    ('home', HomeView),
+    ('client_list', ClientListView),
+    ('client_create', ClientCreateView),
+    ('service_list', ServiceListView),
+    ('service_create', ServiceCreateView),
+    ('order_list', OrderListView),
+    ('order_create', OrderCreateView),
+    ('purchase_list', PurchaseListView),
+    ('purchase_create', PurchaseCreateView),
 ]
 
 # Маршруты, требующие pk.
 # Третий элемент — ключ объекта в фикстуре crm_data.
 ROUTES_WITH_PK = [
-    ("client_detail", ClientDetailView, "client1"),
-    ("client_edit", ClientUpdateView, "client1"),
-    ("client_delete", ClientDeleteView, "client1"),
-    ("service_edit", ServiceUpdateView, "service1"),
-    ("service_delete", ServiceDeleteView, "service1"),
-    ("order_detail", OrderDetailView, "order1"),
-    ("order_edit", OrderUpdateView, "order1"),
-    ("order_delete", OrderDeleteView, "order1"),
-    ("purchase_detail", PurchaseDetailView, "purchase1"),
-    ("purchase_edit", PurchaseUpdateView, "purchase1"),
-    ("purchase_delete", PurchaseDeleteView, "purchase1"),
+    ('client_detail', ClientDetailView, 'client1'),
+    ('client_edit', ClientUpdateView, 'client1'),
+    ('client_delete', ClientDeleteView, 'client1'),
+    ('service_edit', ServiceUpdateView, 'service1'),
+    ('service_delete', ServiceDeleteView, 'service1'),
+    ('order_detail', OrderDetailView, 'order1'),
+    ('order_edit', OrderUpdateView, 'order1'),
+    ('order_delete', OrderDeleteView, 'order1'),
+    ('purchase_detail', PurchaseDetailView, 'purchase1'),
+    ('purchase_edit', PurchaseUpdateView, 'purchase1'),
+    ('purchase_delete', PurchaseDeleteView, 'purchase1'),
 ]
 
 
-@pytest.mark.parametrize(("url_name", "view_class"), ROUTES_NO_PK)
+@pytest.mark.parametrize(('url_name', 'view_class'), ROUTES_NO_PK)
 def test_routes_without_pk_resolve_and_not_404(client, url_name, view_class):
     """Проверяет, что маршруты без pk корректно реверсятся и разрешаются.
 
@@ -109,7 +109,7 @@ def test_routes_with_pk_resolve_and_not_404(
     obj = crm_data[obj_key]
 
     # reverse с pk существующего объекта
-    url = reverse(url_name, kwargs={"pk": obj.pk})
+    url = reverse(url_name, kwargs={'pk': obj.pk})
 
     # resolve должен вернуть правильный класс представления
     resolver = resolve(url)

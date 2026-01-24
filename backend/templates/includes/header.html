@@ -3,7 +3,7 @@
 <aside class="ts-sidebar">
   <div class="ts-sidebar__brand">
     <a href="{% url 'home' %}" class="ts-sidebar__brand-link">
-      TriON CRM
+      TriON
     </a>
   </div>
   <nav class="ts-sidebar__nav">
@@ -36,6 +36,28 @@
         <a href="{% url 'about' %}"
            class="ts-sidebar__link {% if view_name == 'about' %}ts-sidebar__link--active{% endif %}">
           О сервисе
+        </a>
+      </li>
+      <li></li>
+      <li>
+        <a href="{% url 'swagger-ui' %}"
+           class="ts-sidebar__link"
+           target="_blank" rel="noopener">
+          Swagger UI
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'redoc' %}"
+           class="ts-sidebar__link"
+           target="_blank" rel="noopener">
+          ReDoc
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'schema' %}"
+           class="ts-sidebar__link"
+           target="_blank" rel="noopener">
+          OpenAPI (JSON)
         </a>
       </li>
     </ul>

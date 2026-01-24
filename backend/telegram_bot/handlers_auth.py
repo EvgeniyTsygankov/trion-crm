@@ -15,6 +15,7 @@ import requests
 
 from .bot import (
     bot,
+    clear_dialog_states,
     get_crm_or_ask_auth,
     is_allowed_chat,
     login_state,
@@ -121,6 +122,7 @@ def menu_command(message):
     crm = get_crm_or_ask_auth(chat_id)
     if not crm:
         return
+    clear_dialog_states(chat_id)
     show_main_menu(chat_id)
 
 

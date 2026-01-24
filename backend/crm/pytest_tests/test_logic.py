@@ -56,22 +56,62 @@ def test_client_clean_company_required_for_legal():
 
 
 @pytest.mark.django_db
-def test_order_total_price_and_duty(crm_data):
-    """Проверяет вычисление total_price и duty заказа."""
+def test_order_services_total_and_duty(crm_data):
+    """Проверяет вычисления.
+
+    - services_total: сумма услуг заказа;
+    - purchases_total: сумма покупок заказа;
+    - total_amount: общая сумма для клиента = services_total + purchases_total;
+    - duty: долг клиента с учётом аванса.
+
+    Для order1:
+    - service1 = 1000
+    - service2 = 500
+    - services_total = service1 + service2 = 1500
+    - purchase1 = 5000
+    - purchase2 = 4000
+    - purchases_total = purchase1 + purchase2 = 9000
+    - total_amount = services_total + purchases_total = 10500
+    - advance = 300.00
+    - paid = 0.00
+    """
     order = crm_data['order1']
-    # service1 = 1000, service2 = 500, итого 1500
-    assert order.total_price == Decimal(
+    assert order.services_total == Decimal(
         '1500.00'
-    ), 'total_price должен быть равен сумме стоимости услуг заказа'
-    # advance = 300, duty = 1500 - 300 = 1200
+    ), 'services_total должен быть равен сумме стоимости услуг заказа'
+    assert order.purchases_total == Decimal(
+        '9000.00'
+    ), 'purchases_total должен быть равен сумме стоимости покупок заказа'
+    assert order.total_amount == Decimal(
+        '10500.00'
+    ), 'total_amount должен быть равен сумме услуг и покупок заказа'
+    # duty = 10500 - 300 = 10200
     assert order.duty == Decimal(
-        '1200.00'
-    ), 'duty должен равняться total_price - advance'
+        '10200.00'
+    ), 'duty должен равняться total_amount - advance'
 
 
 @pytest.mark.django_db
-def test_order_total_price_without_services():
-    """Если у заказа нет услуг, total_price должен быть 0."""
+def test_order_duty_with_paid(crm_data):
+    """Проверяет расчет долга (duty) при наличии оплаты (paid).
+
+    Для order2:
+    - service1 = 1000
+    - purchase3 = 1000
+    - total_amount = service1 + purchase3 = 2000
+    - advance = 0.00
+    - paid = 200.00
+    """
+    order = crm_data['order2']
+    # duty = 2000 - 200 = 1800
+    assert order.duty == Decimal(
+        '1800.00'
+    ), 'duty должен равняться total_amount - paid'
+
+
+@pytest.mark.django_db
+def test_order_services_total_without_services():
+    """Если у заказа нет услуг, services_total должен быть 0."""
     client = Client.objects.create(
         client_name='Тест',
         mobile_phone='+79990000010',
@@ -85,38 +125,129 @@ def test_order_total_price_without_services():
         advance=Decimal('0.00'),
         status=OrderStatus.IN_WORKING,
     )
-    assert order.total_price == Decimal(
+    assert order.services_total == Decimal(
         '0.00'
-    ), 'total_price для заказа без услуг должен быть 0'
+    ), 'services_total для заказа без услуг должен быть 0'
+    assert order.purchases_total == Decimal(
+        '0.00'
+    ), 'purchases_total для заказа без покупок должен быть 0'
     assert order.duty == Decimal(
         '0.00'
-    ), 'duty для заказа без услуг и без аванса должен быть 0'
+    ), 'duty для заказа без услуг, без покупок и без аванса должен быть 0'
 
 
 @pytest.mark.django_db
 def test_client_total_duty_aggregates_orders(crm_data):
-    """Проверяет, что Client.total_duty агрегирует все заказы клиента."""
-    client1 = crm_data['client1']
+    """Проверяет, что Client.total_duty агрегирует все заказы клиента.
 
-    # Для client1:
-    # order1: services 1000+500=1500, advance 300 → duty 1200
-    # order2: services 1000, advance 0 → duty 1000
-    # Итого 2200
+    Для client1:
+    order1:
+        services_total = 1000 + 500 = 1500
+        purchases_total = 5000 + 4000 = 9000
+        total_amount = services_total + purchases_total = 10500
+        advance = 300
+        paid = 0
+        duty = total_amount - advance - paid = 10200
+
+    order2:
+        services_total = service1 = 1000
+        purchases_total = purchase3 = 1000
+        total_amount = services_total + purchases_total = 2000
+        advance = 0
+        paid = 200
+        duty = total_amount - advance - paid = 1800
+    """
+    client1 = crm_data['client1']
+    # total_duty = 10200 + 1800 = 12000
     assert client1.total_duty == Decimal(
-        '2200.00'
+        '12000.00'
     ), 'total_duty клиента должен равняться сумме долгов по всем его заказам'
 
 
 @pytest.mark.django_db
 def test_order_queryset_total_duty(crm_data):
-    """OrderQuerySet.total_duty должен корректно считать общий долг."""
+    """OrderQuerySet.total_duty должен корректно считать общий долг.
+
+    Для client1:
+    order1:
+        services_total = 1000 + 500 = 1500
+        purchases_total = 5000 + 4000 = 9000
+        total_amount = services_total + purchases_total = 10500
+        advance = 300
+        paid = 0
+        duty = total_amount - advance - paid = 10200
+
+    order2:
+        services_total = service1 = 1000
+        purchases_total = purchase3 = 1000
+        total_amount = services_total + purchases_total = 2000
+        advance = 0
+        paid = 200
+        duty = total_amount - advance - paid = 1800
+
+    client1.total_duty = 12000
+
+    Для client2:
+        services_total = service1 = 1000
+    order3:
+        services_total = 0
+        purchases_total = 0
+        total_amount = 0
+        advance = 200
+        paid = 0
+        duty = total_amount - advance - paid = -200
+
+    client2.total_duty = -200
+    """
     total = Order.objects.all().total_duty()
-    # client1 (order1 + order2) = 1200 + 1000 = 2200
-    # client2 (order3): services_sum=0, advance=200 → duty=-200
-    # Итого: 2200 + (-200) = 2000  # noqa: ERA001
-    assert total == Decimal('2000.00'), (
+    # total_duty= client1.total_duty + client2.total_duty = 12000 - 200 = 11800
+    assert total == Decimal('11800.00'), (
         'OrderQuerySet.total_duty должен возвращать сумму '
-        '(services_sum - advance) по всем заказам выборки'
+        '(total_amount - advance - paid) по всем заказам выборки'
+    )
+
+
+@pytest.mark.django_db
+def test_order_queryset_total_duty_includes_paid(crm_data):
+    """Проверяет, что метод total_duty() менеджера корректно учитывает оплаты.
+
+    Проверяет, что метод total_duty() менеджера Order.objects.all()
+    корректно учитывает оплаты (paid) при расчете общего долга.
+
+    Исходные данные:
+    order1:
+        services_total = 1000 + 500 = 1500
+        purchases_total = 5000 + 4000 = 9000
+        total_amount = services_total + purchases_total = 10500
+        advance = 300
+        paid = 0
+        duty = total_amount - advance - paid = 10200
+
+    order2:
+        services_total = servicel = 1000
+        purchases_total = purchase3 = 1000
+        total_amount = services_total + purchases_total = 2000
+        advance = 0
+        paid = 200
+        duty = total_amount - advance - paid = 1800
+
+    order3:
+        advance = 200
+
+    Тест:
+    - Для order2.paid обновляем значение с 200 на 1800
+    - Новый duty для order2: 2000 - 1800 = 200.00
+    - Новый общий долг total_duty = 10200 + 200 - 200 = 10200.00
+
+    Проверяем, что total_duty() возвращает 10200.00.
+    """
+    order2 = crm_data['order2']
+    order2.paid = Decimal('1800.00')
+    order2.save(update_fields=['paid'])
+    total = Order.objects.all().total_duty()
+    assert total == Decimal('10200.00'), (
+        f'Ожидается общий долг 10200.00 после оплаты 1800.00 по order2, '
+        f'получено {total}'
     )
 
 
@@ -135,8 +266,6 @@ def test_order_code_format():
         detail='Разбит экран',
         advance=Decimal('0.00'),
     )
-    # Для проверки не завязаны на конкретные константы,
-    # но можно проверить, что код содержит номер и префикс.
     assert (
         str(order.number) in order.code
     ), 'Числовой номер заказа должен входить в строку code'

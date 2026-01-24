@@ -23,6 +23,8 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 djoser==2.3.3
 drf-extra-fields==3.7.0
+drf-spectacular==0.29.0
+drf-spectacular-sidecar==2026.1.1
 filelock==3.20.3
 filetype==1.2.0
 flake8==6.0.0
@@ -31,8 +33,11 @@ frozenlist==1.7.0
 gunicorn==23.0.0
 identify==2.6.16
 idna==3.10
+inflection==0.5.1
 iniconfig==2.1.0
 isort==5.13.2
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
 mccabe==0.7.0
 multidict==6.6.4
 mypy_extensions==1.1.0
@@ -55,6 +60,7 @@ Pygments==2.19.2
 PyJWT==2.10.1
 pyTelegramBotAPI==4.29.1
 pytest==8.4.1
+pytest-django==4.11.1
 pytest-dotenv==0.5.2
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
@@ -62,8 +68,10 @@ python3-openid==3.2.0
 pytokens==0.3.0
 pytz==2025.2
 PyYAML==6.0.3
+referencing==0.37.0
 requests==2.32.4
 requests-oauthlib==2.0.0
+rpds-py==0.30.0
 ruff==0.14.11
 six==1.17.0
 social-auth-app-django==5.5.1
@@ -72,6 +80,7 @@ sqlparse==0.5.3
 svgwrite==1.4.3
 typing_extensions==4.15.0
 tzdata==2025.2
+uritemplate==4.2.0
 urllib3==2.5.0
 virtualenv==20.36.1
 yarl==1.20.1

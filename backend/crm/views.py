@@ -1,7 +1,12 @@
 """Представления для CRM проекта."""
 
+from contextlib import suppress
+
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
+from django.db.models.deletion import ProtectedError
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 
@@ -12,7 +17,10 @@ from .base_views import (
     BaseListView,
     BaseUpdateView,
 )
-from .constants import RECENT_ORDERS_LIMIT
+from .constants import (
+    ORDERS_LIMIT_ON_HOMEPAGE,
+    SERVICES_LIMIT_ON_PAGE,
+)
 from .forms import (
     ClientForm,
     OrderForm,
@@ -20,6 +28,7 @@ from .forms import (
     ServiceForm,
 )
 from .models import (
+    Category,
     Client,
     EntityType,
     Order,
@@ -38,7 +47,7 @@ class ClientListView(BaseListView):
     """
 
     model = Client
-    template_name = 'crm/client_list.html'
+    template_name = 'crm/clients/list.html'
     context_object_name = 'clients'
 
     def get_queryset(self):
@@ -108,8 +117,21 @@ class ClientDetailView(BaseDetailView):
     """Класс просмотра клиента."""
 
     model = Client
-    template_name = 'crm/client_detail.html'
+    template_name = 'crm/clients/detail.html'
     context_object_name = 'client'
+
+    def get_queryset(self):
+        """Оптимизирует запросы для страницы детального просмотра клиента."""
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    'orders__purchases',
+                    queryset=Purchase.objects.order_by('-id'),
+                )
+            )
+        )
 
 
 class ClientUpdateView(BaseUpdateView):
@@ -128,17 +150,66 @@ class ClientDeleteView(BaseDeleteView):
     """Класс удаления клиента."""
 
     model = Client
-    template_name = 'crm/client_confirm_delete.html'
+    template_name = 'crm/clients/delete.html'
     context_object_name = 'client'
     success_url = reverse_lazy('client_list')
 
+    def get_queryset(self):
+        """Оптимизирует запросы для страницы подтверждения удаления клиента."""
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    'orders__purchases',
+                    queryset=Purchase.objects.order_by('-id'),
+                )
+            )
+        )
+
 
 class ServiceListView(BaseListView):
-    """Класс списка услуг."""
+    """Список услуг с фильтром по категории и поиском по названию."""
 
     model = Service
-    template_name = 'crm/service_list.html'
+    paginate_by = SERVICES_LIMIT_ON_PAGE
+    template_name = 'crm/services/list.html'
     context_object_name = 'services'
+
+    def get_queryset(self):
+        """Возвращает QuerySet услуг с фильтрацией по категории и поиску.
+
+        Метод выполняет:
+        1. Базовый запрос с оптимизацией (select_related)
+        2. Фильтрацию по категории (если указана в параметрах GET)
+        3. Поиск по названию услуги (если указан поисковый запрос)
+        """
+        qs = Service.objects.select_related('category').order_by(
+            'service_name'
+        )
+        category = (self.request.GET.get('category') or '').strip()
+        if category:
+            qs = qs.filter(category__slug=category)
+        search = (self.request.GET.get('search') or '').strip()
+        if search:
+            qs = qs.filter(Q(service_name__icontains=search))
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        """Добавляет дополнительные данные в контекст шаблона.
+
+        Метод расширяет базовый контекст:
+        1. Список всех категорий для фильтрации
+        2. Текущие значения фильтров для сохранения состояния формы
+        """
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.order_by('title')
+        context['current_filters'] = {
+            'category': self.request.GET.get('category', ''),
+            'search': self.request.GET.get('search', ''),
+        }
+        return context
 
 
 class ServiceCreateView(BaseCreateView):
@@ -166,8 +237,21 @@ class ServiceDeleteView(BaseDeleteView):
     """Класс удаления услуги."""
 
     model = Service
-    http_method_names = ('post',)
+    template_name = 'crm/services/delete.html'
+    context_object_name = 'service'
     success_url = reverse_lazy('service_list')
+
+    def post(self, request, *args, **kwargs):
+        """Обрабатывает POST-запрос на удаление услуги."""
+        self.object = self.get_object()
+        try:
+            return super().post(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(
+                request,
+                'Нельзя удалить услугу: она используется в заказах.',
+            )
+            return redirect('service_list')
 
 
 class OrderListView(BaseListView):
@@ -183,11 +267,11 @@ class OrderListView(BaseListView):
     """
 
     model = Order
-    template_name = 'crm/order_list.html'
+    template_name = 'crm/orders/list.html'
     context_object_name = 'orders'
 
     def get_queryset(self):
-        """Возвращает отфильтрованный QuerySet заказов на основе GET-параметров.
+        """Возвращает отфильтрованный QuerySet заказов на основе GETпараметров.
 
         Поддерживает фильтрацию по следующим параметрам:
         - status: статус заказа (из OrderStatus)
@@ -199,7 +283,11 @@ class OrderListView(BaseListView):
             QuerySet: Оптимизированный и отфильтрованный список заказов
                      с предзагрузкой связанных данных о клиентах.
         """
-        queryset = Order.objects.select_related('client')
+        queryset = (
+            Order.objects.select_related('client')
+            .prefetch_related('service_lines__service')
+            .prefetch_related('purchases')
+        )
         status = self.request.GET.get('status')
         if status:
             queryset = queryset.filter(status=status)
@@ -214,7 +302,7 @@ class OrderListView(BaseListView):
             queryset = queryset.filter(create__date__lte=date_to)
         search = (self.request.GET.get('search') or '').strip()
         if search:
-            queryset = (
+            q = (
                 Q(client__client_name__icontains=search)
                 | Q(client__mobile_phone__icontains=search)
                 | Q(accepted_equipment__icontains=search)
@@ -222,8 +310,8 @@ class OrderListView(BaseListView):
             )
             digits = ''.join(ch for ch in search if ch.isdigit())
             if digits:
-                queryset |= Q(number=int(digits))
-            queryset = queryset.filter(queryset)
+                q |= Q(number=int(digits))
+            queryset = queryset.filter(q)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -275,8 +363,17 @@ class OrderDetailView(BaseDetailView):
     """Класс просмотра заказа."""
 
     model = Order
-    template_name = 'crm/order_detail.html'
+    template_name = 'crm/orders/detail.html'
     context_object_name = 'order'
+
+    def get_queryset(self):
+        """Возвращает QuerySet заказов с оптимизацией запросов к БД."""
+        return (
+            super()
+            .get_queryset()
+            .select_related('client')
+            .prefetch_related('service_lines__service')
+        )
 
 
 class OrderUpdateView(BaseUpdateView):
@@ -295,7 +392,7 @@ class OrderDeleteView(BaseDeleteView):
     """Класс удаления заказа."""
 
     model = Order
-    template_name = 'crm/order_confirm_delete.html'
+    template_name = 'crm/orders/delete.html'
     context_object_name = 'order'
     success_url = reverse_lazy('order_list')
 
@@ -304,23 +401,52 @@ class PurchaseListView(BaseListView):
     """Класс списка покупок запчастей."""
 
     model = Purchase
-    template_name = 'crm/purchase_list.html'
+    template_name = 'crm/purchases/list.html'
     context_object_name = 'purchases'
 
-    def get_queryset(self):  # noqa: PLR6301
-        """Возвращает оптимизированный QuerySet покупок."""
-        return Purchase.objects.select_related('order__client')
+    def get_queryset(self):
+        """Возвращает фильтрованный и отсортированный QuerySet покупок."""
+        qs = Purchase.objects.select_related('order__client').order_by('-id')
+        store = (self.request.GET.get('store') or '').strip()
+        if store:
+            qs = qs.filter(store=store)
+        search = (self.request.GET.get('search') or '').strip()
+        if not search:
+            return qs
+        q = Q(detail__icontains=search)
+        digits = ''.join(ch for ch in search if ch.isdigit())
+        if digits:
+            with suppress(ValueError):
+                q |= Q(order__number=int(digits))
+        return qs.filter(q)
 
     def get_context_data(self, **kwargs):
-        """Добавляет статистику по покупкам в контекст шаблона."""
+        """Добавляет дополнительные данные в контекст шаблона.
+
+        Расширяет базовый контекст представления данными для фильтров,
+        статистики и текущих параметров запроса.
+        """
         context = super().get_context_data(**kwargs)
-        qs = Purchase.objects.select_related('order__client')
+        qs = self.get_queryset()
+
+        context['stores'] = (
+            Purchase.objects.values_list('store', flat=True)
+            .distinct()
+            .order_by('store')
+        )
+        context['current_filters'] = {
+            'store': self.request.GET.get('store', ''),
+            'search': self.request.GET.get('search', ''),
+        }
         context['total_purchases'] = qs.count()
         context['physical_amount_purchase'] = qs.filter(
             order__client__entity_type='FL'
         ).count()
         context['legal_amount_purchase'] = qs.filter(
             order__client__entity_type='UL'
+        ).count()
+        context['without_order_purchase'] = qs.filter(
+            order__isnull=True
         ).count()
         return context
 
@@ -338,7 +464,7 @@ class PurchaseDetailView(BaseDetailView):
     """Класс просмотра покупки запчасти."""
 
     model = Purchase
-    template_name = 'crm/purchase_detail.html'
+    template_name = 'crm/purchases/detail.html'
     context_object_name = 'purchase'
 
 
@@ -358,13 +484,13 @@ class PurchaseDeleteView(BaseDeleteView):
     """Класс удаления покупки запчасти."""
 
     model = Purchase
-    template_name = 'crm/purchase_confirm_delete.html'
+    template_name = 'crm/purchases/delete.html'
     context_object_name = 'purchase'
     success_url = reverse_lazy('purchase_list')
 
 
 class HomeView(LoginRequiredMixin, TemplateView):
-    """Главная страница CRM."""
+    """Класс главной страницы CRM системы."""
 
     template_name = 'crm/home_page.html'
 
@@ -386,5 +512,11 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['total_duty'] = Order.objects.total_duty()
         context['recent_orders'] = Order.objects.select_related(
             'client'
-        ).order_by('-create')[:RECENT_ORDERS_LIMIT]
+        ).order_by('-create')[:ORDERS_LIMIT_ON_HOMEPAGE]
         return context
+
+
+class AboutView(LoginRequiredMixin, TemplateView):
+    """Класс страницы 'О сервисе'."""
+
+    template_name = 'crm/about.html'

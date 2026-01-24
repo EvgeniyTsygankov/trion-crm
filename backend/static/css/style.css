@@ -1,3 +1,7 @@
+:root {
+  --sidebar-width: 220px;
+}
+
 /* Базовые стили для всей страницы */
 body {
   margin: 0;
@@ -36,7 +40,6 @@ body {
   padding: 8px 12px;
 }
 
-/* Список ссылок в меню */
 .ts-sidebar__nav ul {
   list-style: none;
   margin: 0;
@@ -68,10 +71,9 @@ body {
 }
 
 .ts-sidebar__link--active {
-  background-color: #0d6efd; /* активный пункт меню */
+  background-color: #0d6efd;
 }
 
-/* Блок пользователя внизу панели */
 .ts-sidebar__user {
   position: absolute;
   left: 10px;
@@ -88,13 +90,11 @@ body {
   background-color: #444;
 }
 
-/* Основной контент: сдвиг вправо на ширину сайдбара */
 .ts-main {
-  margin-left: 220px;   /* та же ширина, что у .ts-sidebar */
+  margin-left: var(--sidebar-width);
   padding: 20px 20px 40px;
 }
 
-/* Немного адаптивности: на узких экранах меню сверху */
 @media (max-width: 992px) {
   .ts-sidebar {
     position: static;
@@ -105,4 +105,44 @@ body {
   .ts-main {
     margin-left: 0;
   }
+}
+
+/* Сообщения Django (Bootstrap alerts) */
+.alert {
+  font-size: 1.05rem;
+}
+
+.alert-danger {
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-width: 2px;
+}
+
+/* Улучшение заголовков таблиц */
+.table thead th {
+  background-color: #f8f9fa;   /* светлый фон как у Bootstrap */
+  color: #212529;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+/* Липкая шапка таблицы (работает внутри .table-responsive) */
+.table-responsive thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* Чуть приятнее ховер строк (если нужно) */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Hover-цвет для строк таблиц (поверх table-striped) */
+.table.table-hover tbody tr:hover > * {
+  background-color: rgba(13, 110, 253, 0.12) !important;
 }

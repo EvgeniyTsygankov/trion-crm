@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Ошибка сервера{% endblock %}
+{% block content %}
+  <div class="container-fluid py-5 text-center">
+    <h1 class="display-5 mb-2">500</h1>
+    <p class="lead mb-1">Ошибка сервера</p>
+    <p class="text-muted">Что-то пошло не так. Попробуйте обновить страницу позже.</p>
+    <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+      <a class="btn btn-primary" href="{% url 'home' %}">На главную</a>
+      <button class="btn btn-outline-secondary" type="button" onclick="location.reload()">Обновить</button>
+    </div>
+  </div>
+{% endblock %}

@@ -92,7 +92,7 @@ def purchases_menu_keyboard():
     """Подменю раздела 'Покупки': фильтры по статусам + Меню / Авторизация."""
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button_all = types.KeyboardButton('Все покупки')
-    button_awaiting = types.KeyboardButton('Ожидает получения')
+    button_awaiting = types.KeyboardButton('Ожидается поставка')
     button_received = types.KeyboardButton('Получено')
     button_installed = types.KeyboardButton('Установлено')
     button_menu = types.KeyboardButton('Меню')

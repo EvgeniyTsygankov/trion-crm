@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Детали покупки: {{ purchase.order.code }}{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h5>Информация о покупке</h5>
+    </div>
+    <div class="card-body">
+      {% if purchase.order %}
+        <p><strong>К заказу: </strong>{{ purchase.order.code }}</p>
+      {% else %}
+        <p><strong>К заказу: </strong>без заказа</p>
+      {% endif %}
+      <p><strong>Дата: </strong>{{ purchase.create|date:"d.m.Y" }}</p>
+      <p><strong>Магазин: </strong>{{ purchase.store }}</p>
+      <p><strong>Описание товара: </strong>{{ purchase.detail }}</p>
+      <p><strong>Стоимость: </strong>{{ purchase.cost }}</p>
+      <p><strong>Статус: </strong>{{ purchase.get_status_display }}</p>
+    </div>
+  </div>
+{% endblock %}

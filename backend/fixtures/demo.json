@@ -1,0 +1,858 @@
+[
+{
+  "model": "crm.category",
+  "pk": 2,
+  "fields": {
+    "title": "Диагностика",
+    "slug": "diagnostika"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 3,
+  "fields": {
+    "title": "Замена",
+    "slug": "zamena"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 4,
+  "fields": {
+    "title": "Ремонт",
+    "slug": "remont"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 5,
+  "fields": {
+    "title": "Установка",
+    "slug": "ustanovka"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 8,
+  "fields": {
+    "title": "Работа с данными",
+    "slug": "rabota-s-dannymi"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 9,
+  "fields": {
+    "title": "Обслуживание периферийных устройств",
+    "slug": "obsluzhivanie-periferijnyh-ustrojstv"
+  }
+},
+{
+  "model": "crm.category",
+  "pk": 10,
+  "fields": {
+    "title": "Сопутствующие и комплексные услуги",
+    "slug": "soputstvuyushie-i-kompleksnye-uslugi"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 3,
+  "fields": {
+    "category": 2,
+    "service_name": "Диагностика аккумулятора",
+    "amount": "600.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 4,
+  "fields": {
+    "category": 2,
+    "service_name": "Диагностика блока питания",
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 5,
+  "fields": {
+    "category": 2,
+    "service_name": "Диагностика оборудования общая",
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 6,
+  "fields": {
+    "category": 2,
+    "service_name": "Диагностика системы охлаждения",
+    "amount": "400.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 7,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена батареи питания BIOS",
+    "amount": "400.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 8,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена гнезда питания ноутбука",
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 9,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена кнопки включения",
+    "amount": "300.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 10,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена корпусных деталей",
+    "amount": "600.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 11,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена матрицы ноутбука",
+    "amount": "1500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 12,
+  "fields": {
+    "category": 4,
+    "service_name": "Ремонт блока питания",
+    "amount": "800.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 13,
+  "fields": {
+    "category": 4,
+    "service_name": "Ремонт видеокарты",
+    "amount": "1700.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 14,
+  "fields": {
+    "category": 5,
+    "service_name": "Установка антивирусов",
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 15,
+  "fields": {
+    "category": 5,
+    "service_name": "Установка защитной пленки/стекла на смартфон/планшет",
+    "amount": "600.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 16,
+  "fields": {
+    "category": 5,
+    "service_name": "Установка комплектующих",
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 17,
+  "fields": {
+    "category": 5,
+    "service_name": "Установка операционной системы",
+    "amount": "1500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 18,
+  "fields": {
+    "category": 3,
+    "service_name": "Замена клавиатуры",
+    "amount": "1000.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 21,
+  "fields": {
+    "category": 4,
+    "service_name": "Ремонт подсветки дисплея",
+    "amount": "1300.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 22,
+  "fields": {
+    "category": 4,
+    "service_name": "Ремонт материнской платы",
+    "amount": "1200.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 23,
+  "fields": {
+    "category": 8,
+    "service_name": "Восстановление данных с накопителей",
+    "amount": "1500.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 24,
+  "fields": {
+    "category": 9,
+    "service_name": "Замена фотобарабана",
+    "amount": "800.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 25,
+  "fields": {
+    "category": 9,
+    "service_name": "Замена роликов подачи бумаги",
+    "amount": "1000.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 26,
+  "fields": {
+    "category": 10,
+    "service_name": "Чистка от пыли и замена термопасты",
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 27,
+  "fields": {
+    "category": 10,
+    "service_name": "Выезд мастера на дом или в офис для диагностики/ремонта",
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 28,
+  "fields": {
+    "category": 10,
+    "service_name": "Помощь в выборе и покупке комплектующих",
+    "amount": "1000.00"
+  }
+},
+{
+  "model": "crm.service",
+  "pk": 29,
+  "fields": {
+    "category": 9,
+    "service_name": "Заправка картриджей",
+    "amount": "1200.00"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 1,
+  "fields": {
+    "client_name": "Воронин Анатолий",
+    "mobile_phone": "+79990000001",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Льва Толстого, дом 47, кв. 16"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 2,
+  "fields": {
+    "client_name": "Уляшева Мария",
+    "mobile_phone": "+79990000002",
+    "entity_type": "UL",
+    "company": "ООО \"Рога и копыта\"",
+    "address": ""
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 3,
+  "fields": {
+    "client_name": "Заводчикова Виктория",
+    "mobile_phone": "+79990000003",
+    "entity_type": "UL",
+    "company": "ООО \"Креветки\"",
+    "address": ""
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 4,
+  "fields": {
+    "client_name": "Иванькова Наталья",
+    "mobile_phone": "+79990000004",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Пр-кт Калинина, дом 11, кв. 28"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 5,
+  "fields": {
+    "client_name": "Коротков Михаил",
+    "mobile_phone": "+79990000005",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Малыгина, дом 22, кв. 49"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 6,
+  "fields": {
+    "client_name": "Мельникова Алёна",
+    "mobile_phone": "+79990000006",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Малая Морская, дом 71, кв. 9"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 7,
+  "fields": {
+    "client_name": "Красильников Евгений",
+    "mobile_phone": "+79990000007",
+    "entity_type": "UL",
+    "company": "ИП Красильников Е.И.",
+    "address": ""
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 8,
+  "fields": {
+    "client_name": "Самохина Ирина",
+    "mobile_phone": "+79990000008",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Псковская, дом 14, кв. 78"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 9,
+  "fields": {
+    "client_name": "Иванова Юлия",
+    "mobile_phone": "+79990000009",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Ворошилова, дом 8, кв. 17"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 10,
+  "fields": {
+    "client_name": "Кудрявцева Ирина",
+    "mobile_phone": "+79990000010",
+    "entity_type": "FL",
+    "company": "",
+    "address": "Ул Некрасова, дом 15, кв. 27"
+  }
+},
+{
+  "model": "crm.client",
+  "pk": 12,
+  "fields": {
+    "client_name": "Фомина Виктория",
+    "mobile_phone": "+79990000011",
+    "entity_type": "UL",
+    "company": "ИП Фомина В.А.",
+    "address": "ТЦ Парк Хаус, помещение 3А"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 1,
+  "fields": {
+    "number": 1,
+    "client": 1,
+    "create": "2026-01-20T15:47:27.745Z",
+    "accepted_equipment": "Блок питания DEEPCOOL PF750",
+    "detail": "Не запускается",
+    "services_total_override": null,
+    "advance": "200.00",
+    "paid": "0.00",
+    "status": "in_working"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 2,
+  "fields": {
+    "number": 2,
+    "client": 2,
+    "create": "2026-01-20T15:47:56.462Z",
+    "accepted_equipment": "Ноутбук ASUS VivoBook 15",
+    "detail": "Не работает экран. Требуется замена матрицы",
+    "services_total_override": "1500.00",
+    "advance": "400.00",
+    "paid": "6010.00",
+    "status": "completed"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 3,
+  "fields": {
+    "number": 3,
+    "client": 4,
+    "create": "2026-01-20T15:48:27.233Z",
+    "accepted_equipment": "Системный блок DEXP",
+    "detail": "Нет изображения. Сгорела видеокарта, требуется замена",
+    "services_total_override": "500.00",
+    "advance": "15900.00",
+    "paid": "0.00",
+    "status": "ready_pickup"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 4,
+  "fields": {
+    "number": 4,
+    "client": 3,
+    "create": "2026-01-20T15:48:53.047Z",
+    "accepted_equipment": "Ноутбук Dell Vostro 3520 черный",
+    "detail": "Не запускается, отсутствует питание",
+    "services_total_override": null,
+    "advance": "0.00",
+    "paid": "0.00",
+    "status": "in_working"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 5,
+  "fields": {
+    "number": 5,
+    "client": 5,
+    "create": "2026-01-20T15:49:27.255Z",
+    "accepted_equipment": "Системный блок ARDOR GAMING",
+    "detail": "Отсутствует изображение. Требуется замена видеокарты",
+    "services_total_override": null,
+    "advance": "0.00",
+    "paid": "0.00",
+    "status": "under_approval"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 6,
+  "fields": {
+    "number": 6,
+    "client": 6,
+    "create": "2026-01-20T15:50:46.029Z",
+    "accepted_equipment": "Телефон Samsung Galaxy S24",
+    "detail": "Установка защитного стекла",
+    "services_total_override": null,
+    "advance": "0.00",
+    "paid": "600.00",
+    "status": "completed"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 7,
+  "fields": {
+    "number": 7,
+    "client": 8,
+    "create": "2026-01-20T15:51:19.748Z",
+    "accepted_equipment": "Ноутбук Samsung Galaxy Book 4 NP754 серебристый",
+    "detail": "Dr.Web Security Space 12 месяцев для 1 устройства",
+    "services_total_override": "500.00",
+    "advance": "0.00",
+    "paid": "1999.00",
+    "status": "completed"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 8,
+  "fields": {
+    "number": 8,
+    "client": 7,
+    "create": "2026-01-20T15:58:13.674Z",
+    "accepted_equipment": "Компьютер iRU Tactio 310H6GE",
+    "detail": "Греется, требуется переустановка ОС, установка антивируса",
+    "services_total_override": "2900.00",
+    "advance": "7000.00",
+    "paid": "0.00",
+    "status": "waiting_part"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 9,
+  "fields": {
+    "number": 9,
+    "client": 7,
+    "create": "2026-01-20T19:13:39.270Z",
+    "accepted_equipment": "Ноутбук Acer Aspire 3",
+    "detail": "Частично не работают кнопки клавиатуры. Был залит кофе",
+    "services_total_override": "1000.00",
+    "advance": "2000.00",
+    "paid": "109.00",
+    "status": "completed"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 11,
+  "fields": {
+    "number": 11,
+    "client": 12,
+    "create": "2026-01-21T13:01:12.734Z",
+    "accepted_equipment": "МФУ лазерное Kyocera MA2000",
+    "detail": "Замятия бумаги. Требуется заправка. Требуется  замена узла захвата и тормозная площадка",
+    "services_total_override": "3200.00",
+    "advance": "1000.00",
+    "paid": "0.00",
+    "status": "waiting_part"
+  }
+},
+{
+  "model": "crm.order",
+  "pk": 12,
+  "fields": {
+    "number": 12,
+    "client": 12,
+    "create": "2026-01-21T13:28:54.192Z",
+    "accepted_equipment": "Планшет HUAWEI MatePad SE 11",
+    "detail": "Dr.Web Security Space 12 месяцев для 1 устройства.",
+    "services_total_override": "300.00",
+    "advance": "0.00",
+    "paid": "1799.00",
+    "status": "completed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 1,
+  "fields": {
+    "order": 2,
+    "create": "2026-01-20T15:51:59.851Z",
+    "store": "aliexpress",
+    "detail": "Матрица для ноутбука Asus N750 / 1920x1080 (FHD) / TN матовая",
+    "cost": "4910.00",
+    "status": "installed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 2,
+  "fields": {
+    "order": 3,
+    "create": "2026-01-20T15:52:18.806Z",
+    "store": "DNS",
+    "detail": "Видеокарта ASRock Intel Arc A380 Challenger ITX OC",
+    "cost": "15900.00",
+    "status": "installed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 3,
+  "fields": {
+    "order": null,
+    "create": "2026-01-20T16:07:04.138Z",
+    "store": "Citilink",
+    "detail": "Оперативная память A-Data Premier AD4U320016G22-SGN DDR4 - 1x 16ГБ 3200МГц, DIMM, Ret.",
+    "cost": "12990.00",
+    "status": "received"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 4,
+  "fields": {
+    "order": 9,
+    "create": "2026-01-21T07:30:15.090Z",
+    "store": "aliexpress",
+    "detail": "Русская клавиатура черная для ноутбука Acer Aspire 3",
+    "cost": "1109.00",
+    "status": "installed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 5,
+  "fields": {
+    "order": 11,
+    "create": "2026-01-21T13:02:36.112Z",
+    "store": "Ozon",
+    "detail": "Узел захвата и тормозная площадка для Kyocera MA2000 MA2001",
+    "cost": "1138.00",
+    "status": "delivery_expected"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 6,
+  "fields": {
+    "order": 7,
+    "create": "2026-01-21T13:32:34.507Z",
+    "store": "DrWeb",
+    "detail": "Dr.Web Security Space 12 месяцев для 1 устройства",
+    "cost": "1499.00",
+    "status": "installed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 7,
+  "fields": {
+    "order": 8,
+    "create": "2026-01-21T13:35:31.577Z",
+    "store": "Kaspersky",
+    "detail": "Антивирус Kaspersky Premium 1-устр 1 год",
+    "cost": "2999.00",
+    "status": "received"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 8,
+  "fields": {
+    "order": 12,
+    "create": "2026-01-21T13:44:16.213Z",
+    "store": "Dr.Web",
+    "detail": "Dr.Web Security Space 12 месяцев для 1 устройства",
+    "cost": "1499.00",
+    "status": "installed"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 9,
+  "fields": {
+    "order": 8,
+    "create": "2026-01-21T14:06:10.911Z",
+    "store": "DNS",
+    "detail": "Операционная система Microsoft Windows 11 Pro Цифровая версия",
+    "cost": "7999.00",
+    "status": "delivery_expected"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 10,
+  "fields": {
+    "order": 8,
+    "create": "2026-01-21T14:17:31.970Z",
+    "store": "DNS",
+    "detail": "Вентилятор ID-COOLING FL Series",
+    "cost": "320.00",
+    "status": "delivery_expected"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 11,
+  "fields": {
+    "order": 8,
+    "create": "2026-01-21T14:17:55.091Z",
+    "store": "Citilink",
+    "detail": "Устройство охлаждения(кулер) ID-COOLING SE-224-XTS, 4-pin, 120мм, черный, retail",
+    "cost": "1900.00",
+    "status": "received"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 12,
+  "fields": {
+    "order": 4,
+    "create": "2026-01-22T11:44:51.864Z",
+    "store": "Ozon",
+    "detail": "Разъем питания 4.5x3.0мм для ноутбука Dell Vostro 3500 3400 3515 3501 3401 , Inspiron 3511 5593 3505 3515 P90F P90F002 / 04VP7C - с проводом",
+    "cost": "400.00",
+    "status": "received"
+  }
+},
+{
+  "model": "crm.purchase",
+  "pk": 13,
+  "fields": {
+    "order": null,
+    "create": "2026-01-23T08:34:10.470Z",
+    "store": "DNS",
+    "detail": "1 ТБ Жесткий диск Seagate BarraCuda [ST1000DM014] [SATA III, 6 Гбит/с, 7200 об/мин, кэш память - 256 МБ]",
+    "cost": "13199.00",
+    "status": "received"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 1,
+  "fields": {
+    "order": 1,
+    "service": 4,
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 2,
+  "fields": {
+    "order": 2,
+    "service": 11,
+    "amount": "1500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 4,
+  "fields": {
+    "order": 4,
+    "service": 8,
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 5,
+  "fields": {
+    "order": 5,
+    "service": 5,
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 6,
+  "fields": {
+    "order": 6,
+    "service": 15,
+    "amount": "600.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 7,
+  "fields": {
+    "order": 7,
+    "service": 14,
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 8,
+  "fields": {
+    "order": 8,
+    "service": 17,
+    "amount": "1500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 9,
+  "fields": {
+    "order": 8,
+    "service": 14,
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 10,
+  "fields": {
+    "order": 9,
+    "service": 18,
+    "amount": "1000.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 12,
+  "fields": {
+    "order": 11,
+    "service": 25,
+    "amount": "3000.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 13,
+  "fields": {
+    "order": 11,
+    "service": 29,
+    "amount": "1200.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 14,
+  "fields": {
+    "order": 3,
+    "service": 5,
+    "amount": "500.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 15,
+  "fields": {
+    "order": 12,
+    "service": 14,
+    "amount": "700.00"
+  }
+},
+{
+  "model": "crm.serviceinorder",
+  "pk": 17,
+  "fields": {
+    "order": 8,
+    "service": 26,
+    "amount": "700.00"
+  }
+},
+{
+  "model": "sequences.sequence",
+  "pk": "order",
+  "fields": {
+    "last": 12
+  }
+}
+]

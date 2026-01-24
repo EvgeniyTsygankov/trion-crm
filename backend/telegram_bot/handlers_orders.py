@@ -23,7 +23,7 @@ from .bot import (
     sessions,
     show_main_menu,
 )
-from .constants import ORDER_STATUS_TEXT_TO_CODE
+from .constants import ORDER_STATUS_TEXT_TO_CODE, SERVICE_BUTTONS
 from .keyboards import (
     orders_menu_keyboard,
     orders_search_keyboard,
@@ -69,7 +69,7 @@ def orders_search_start(message):
         chat_id,
         (
             'Поиск по номеру телефона клиента (в формате +7999...) /\n'
-            'номеру заказа (пример: 101) /\n'
+            'номеру заказа (пример: TN-00001) /\n'
             'наименованию оборудования (пример: Asus ROG)'
         ),
         reply_markup=orders_search_keyboard(),
@@ -77,8 +77,10 @@ def orders_search_start(message):
 
 
 @bot.message_handler(
-    func=lambda m: orders_state.get(m.chat.id, {}).get('stage')
-    == 'await_search'
+    func=lambda m: (
+        orders_state.get(m.chat.id, {}).get('stage') == 'await_search'
+        and (m.text not in SERVICE_BUTTONS)
+    )
 )
 def orders_by_search(message):
     """Ищет и отображает заказы по введённой строке.
@@ -89,8 +91,6 @@ def orders_by_search(message):
     - наименование оборудования.
     При отсутствии результатов выводит сообщение и возвращает в меню.
     """
-    if message.text in {'Меню', 'Авторизация', 'Клиенты', 'Заказы', 'Покупки'}:
-        return
     chat_id = message.chat.id
     query = message.text.strip()
     try:

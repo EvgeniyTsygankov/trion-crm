@@ -1,4 +1,4 @@
-"""Тесты для моделей CRM-системы (проверка строковых представлений и метаданных).
+"""Тесты для моделей CRM-системы.
 
 Этот файл содержит тесты для проверки:
 1. Методов __str__() всех моделей
@@ -136,16 +136,8 @@ def test_order_field_meta():
 
     accepted_field = meta.get_field('accepted_equipment')
     assert accepted_field.verbose_name == 'Принятое оборудование'
-    assert 'Наименование оборудования' in (accepted_field.help_text or ''), (
-        'help_text для accepted_equipment должен подсказать, '
-        'что это наименование оборудования'
-    )
-
     detail_field = meta.get_field('detail')
-    assert detail_field.verbose_name == 'Детали заказа'
-    assert 'Описание неисправности' in (
-        detail_field.help_text or ''
-    ), 'help_text для detail должен подсказать,что это описание неисправности'
+    assert detail_field.verbose_name == 'Описание неисправности'
 
 
 @pytest.mark.django_db
@@ -154,7 +146,7 @@ def test_purchase_meta():
     purchase = Purchase.objects.create(
         store='DNS',
         detail='Жёсткий диск',
-        status=PurchaseStatus.AWAITING_RECEIPT,
+        status=PurchaseStatus.DELIVERY_EXPECTED,
     )
     meta = purchase._meta
     assert meta.verbose_name == 'Покупка'
@@ -167,11 +159,11 @@ def test_purchase_status_choices():
     purchase = Purchase.objects.create(
         store='Магазин',
         detail='Деталь',
-        status=PurchaseStatus.AWAITING_RECEIPT,
+        status=PurchaseStatus.DELIVERY_EXPECTED,
     )
     status_field = purchase._meta.get_field('status')
     expected_codes = [
-        PurchaseStatus.AWAITING_RECEIPT,
+        PurchaseStatus.DELIVERY_EXPECTED,
         PurchaseStatus.RECEIVED,
         PurchaseStatus.INSTALLED,
     ]
@@ -182,8 +174,8 @@ def test_purchase_status_choices():
         ), f'Статус "{expected}" должен быть в choices модели Purchase'
     # Проверяем читаемое название статуса через TextChoices.label
     assert (
-        purchase.get_status_display() == PurchaseStatus.AWAITING_RECEIPT.label
+        purchase.get_status_display() == PurchaseStatus.DELIVERY_EXPECTED.label
     ), (
         'get_status_display() должен возвращать label из PurchaseStatus '
-        '(ожидает получения)'
+        '(ожидается поставка)'
     )

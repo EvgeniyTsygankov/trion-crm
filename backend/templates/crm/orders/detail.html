@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Детали заказа: {{ order.code }}{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h5>Информация о заказе</h5>
+    </div>
+    <div class="card-body">
+      <p><strong>Номер: </strong>{{ order.code }}</p>
+      <p><strong>Дата: </strong>{{ order.create|date:"d.m.Y" }}</p>
+      <p><strong>ФИО: </strong>{{ order.client.client_name }}</p>
+      <p><strong>Телефон: </strong>{{ order.client.mobile_phone }}</p>
+      <p><strong>Оборудование: </strong>{{ order.accepted_equipment }}</p>
+      <p><strong>Описание неисправности: </strong>{{ order.detail }}</p>
+      <p><strong>Выполняемые работы:</strong>
+        {% if order.service_lines.exists %}
+          {% for line in order.service_lines.all %}
+            {{ line.service.service_name }} ({{ line.amount }} ₽)
+            {% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        {% else %}
+          не указаны
+        {% endif %}
+      </p>
+      <p><strong>Услуги: </strong>{{ order.services_total }} ₽</p>
+      <p><strong>Товар: </strong>{{ order.purchases_total }} ₽</p>
+      <p><strong>Общая сумма: </strong>{{ order.total_amount }} ₽</p>
+      <p><strong>Аванс: </strong>{{ order.advance }} ₽</p>
+      <p><strong>Оплата: </strong>{{ order.paid }} ₽</p>
+      <p><strong>Долг: </strong>{{ order.duty }} ₽</p>
+      <p><strong>Статус: </strong>{{ order.get_status_display }}</p>
+    </div>
+  </div>
+  <div class="card mt-4">
+    <div class="card-header">
+        <h6>Комплектующие к заказу</h6>
+    </div>
+    <div class="card-body">
+      {% for purchase in order.purchases.all %}
+          <div class="border-bottom pb-2 mb-2">
+            <p>Дата: {{ purchase.create|date:"d.m.Y" }}</p>
+            <p>Магазин: {{ purchase.store }}</p>
+            <p>Описание товара: {{ purchase.detail }}</p>
+            <p>Стоимость: {{ purchase.cost }}</p>
+            <p>Статус:  {{ purchase.get_status_display }}</p>
+          </div>
+      {% empty %}
+          <p>Комплектующие к заказу отсутствуют</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
