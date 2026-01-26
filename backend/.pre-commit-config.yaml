@@ -15,6 +15,13 @@ repos:
   
   - repo: local
     hooks:
+      - id: check-migrations
+        name: Check pending migrations (DEBUG=True)
+        entry: python backend/tools/check_migrations.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
       - id: pytest-sqlite
         name: pytest (SQLite, DEBUG=True)
         entry: python backend/tools/run_pytest_sqlite.py
