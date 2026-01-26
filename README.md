@@ -63,13 +63,15 @@ CRM система для управления сервисным центром
 
 - Python 3.11
 - Django 5.2, Django REST Framework
-- PostgreSQL (Docker/prod), SQLite (локальная разработка при `DEBUG=True`)
+- Database:
+  - PostgreSQL (Docker/prod)
+  - SQLite (локальная разработка при `DEBUG=True`)
 - Auth: JWT (SimpleJWT), Djoser
 - API docs: drf-spectacular (Swagger UI / ReDoc)
 - Telegram: pyTelegramBotAPI
 - Infra: Docker, Docker Compose, nginx (gateway)
 - Tests: pytest, pytest-django
-- Code quality: Ruff, Black, pre-commit
+- Code quality: Ruff, Black, pre-commit/pre-push hooks
 
 ## Структура проекта
 ```text
@@ -83,7 +85,7 @@ trion-crm/
 │   ├── fixtures/              # demo.json
 │   ├── manage.py
 │   └── requirements.txt
-├── gateway/                   # nginx/gateway
+├── gateway/                   # nginx
 ├── docker-compose.yml
 ├── docker-compose.production.yml
 └── README.md
