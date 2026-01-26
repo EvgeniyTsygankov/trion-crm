@@ -70,3 +70,8 @@ ignore = [
 "**/*_test.py" = ["S101"]
 "**/pytest_tests/**/*.py" = ["S101"]
 "manage.py" = ["TRY003", "PLC0415"]
+
+# Настраиваем сортировку импортов
+# Указываем локальные модули для Ruff
+[tool.ruff.lint.isort]
+known-first-party = ["api", "crm", "telegram_bot"]
