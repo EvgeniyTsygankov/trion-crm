@@ -1,186 +1,159 @@
-# Название workflow (рабочего процесса)
 name: Main TriON workflow
 
-# Триггеры запуска workflow:
-# on - определяет события, которые запускают workflow
 on:
-  push:  # При пуше (загрузке изменений) в репозиторий
-    branches:  # Указываем, какие ветки отслеживать
-      - main  # Только ветка main
+  push:
+    branches:
+      - main
 
-# Определение jobs (задач), которые будут выполнены в workflow
 jobs:
-  # Название задачи - tests (тестирование)
   tests:
-    # Разворачиваем окружение:
-    # runs-on - определяет тип виртуальной машины для выполнения задачи
     runs-on: ubuntu-latest
     
-    # Определение сервисов, которые будут запущены в Docker-контейнерах
     services:
-      postgres:  # Название сервиса (будет использоваться как hostname)
-        image: postgres:16  # Используем образ PostgreSQL версии 16
-        env:  # Переменные окружения для контейнера PostgreSQL
-          POSTGRES_USER: test_user  # Имя пользователя базы данных
-          POSTGRES_PASSWORD: test_password  # Пароль пользователя
-          POSTGRES_DB: test_db  # Название тестовой базы данных
-        ports:  # Проброс портов из контейнера в хост
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
           - 5432:5432
-        # Параметры health check для Docker контейнера
-        # Используем многострочную строку YAML (склеивается в одну строку)
         options: >-
           --health-cmd="pg_isready -U test_user -d test_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-        # Комментарии к параметрам health check:
-        # 1. --health-cmd - команда проверки готовности PostgreSQL
-        #    pg_isready - утилита PostgreSQL для проверки доступности
-        #    -U test_user - подключаемся с указанным пользователем
-        #    -d test_db - проверяем конкретную базу данных
-        # 2. --health-interval=10s - проверка каждые 10 секунд
-        # 3. --health-timeout=5s - таймаут 5 секунд на выполнение проверки
-        # 4. --health-retries=5 - 5 неудачных попыток → контейнер unhealthy
 
-    # Глобальные переменные окружения для всех шагов задачи
     env:
-      SECRET_KEY: test-secret-key  # Секретный ключ для Django
-      DEBUG: "False"  # Режим отладки Django выключен
-      POSTGRES_DB: test_db  # Название базы данных (дублируется для приложения)
-      POSTGRES_USER: test_user  # Имя пользователя БД (дублируется для приложения)
-      POSTGRES_PASSWORD: test_password  # Пароль БД (дублируется для приложения)
-      POSTGRES_HOST: localhost  # Хост для подключения к PostgreSQL
-      POSTGRES_PORT: 5432  # Порт для подключения к PostgreSQL
+      SECRET_KEY: test-secret-key
+      DEBUG: "False"
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
     
-    # Определение шагов (steps) выполнения задачи
     steps:
-    # Шаг 1: Копируем код проекта из репозитория
     - name: Check out repository code
-      uses: actions/checkout@v3  # Используем готовый action для checkout
+      uses: actions/checkout@v3
 
-    # Шаг 2: Устанавливаем Python с помощью action
     - name: Set up Python
-      uses: actions/setup-python@v4  # Используем action для установки Python
-      # В action setup-python@v4 передаём параметр — версию Python
-      with:  # Блок параметров для action
-        python-version: 3.11  # Устанавливаем Python версии 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
 
-    # Шаг 3: Устанавливаем зависимости проекта
     - name: Install dependencies
-      working-directory: ./backend  # Устанавливаем рабочую директорию
-      # Обновляем pip, setuptools
-      # Устанавливаем зависимости из файла
-      run: |  # Многострочная команда shell
+      working-directory: ./backend
+      run: |
         python -m pip install --upgrade pip setuptools
         pip install -r requirements.txt
 
-    # Шаг 4: Запускаем Ruff (линтер и форматтер для Python)
     - name: Run Ruff
-      working-directory: ./backend  # Устанавливаем рабочую директорию
-      # Вызываем Ruff с параметрами:
+      working-directory: ./backend
       run: ruff check --config pyproject.toml --statistics .
-      # ruff check - команда проверки кода
-      # --config pyproject.toml - указываем файл конфигурации
-      # --statistics - выводит статистику по найденным проблемам
-      # . - проверяем текущую директорию
 
-    # Шаг 5: Запускаем Black (автоформаттер для Python)
     - name: Run Black (check only)
-      working-directory: ./backend  # Устанавливаем рабочую директорию
-      # Вызываем Black только для проверки (без автоисправления)
+      working-directory: ./backend
       run: black --check --config pyproject.toml .
-      # black - запуск форматтера
-      # --check - режим проверки (не вносит изменения)
-      # --config pyproject.toml - файл конфигурации
-      # . - проверяем текущую директорию
 
-    # Шаг 6: Выполняем проверку миграций
     - name: Check migrations
       working-directory: ./backend
       run: python manage.py makemigrations --check --dry-run
 
-    # Шаг 7: Запускаем Pytest (тестирование)
     - name: Run pytest tests
-      # Устанавливаем рабочую директорию
       working-directory: ./backend
-      # Вызываем Pytest с подробным выводом
       run: pytest -vv
 
-
-  # Вторая задача: Сборка и публикация Docker-образа backend
   build_backend_and_push_to_docker_hub:
     name: Push backend Docker image to DockerHub
-    # Определяем тип виртуальной машины для выполнения задачи
     runs-on: ubuntu-latest
-    # Зависимость от задачи tests - выполнится только если tests успешна
     needs: tests
     steps:
-      # Шаг 1: Получаем код из репозитория
       - name: Check out the repo
         uses: actions/checkout@v3
-        # Копируем код репозитория в рабочую директорию
       
-      # Шаг 2: Настраиваем Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        # Buildx - расширенный инструмент сборки Docker с поддержкой multi-arch сборок
-        # Позволяет собирать образы для разных архитектур (amd64, arm64 и т.д.)
       
-      # Шаг 3: Авторизация в Docker Hub
       - name: Login to Docker 
         uses: docker/login-action@v2
         with:
-          # Используем секреты GitHub для хранения учетных данных
-          username: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Пароль или токен доступа
-        # Авторизуемся в Docker Hub для возможности публикации образов
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       
-      # Шаг 4: Сборка и публикация Docker-образа
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./backend/  # Контекст сборки Docker (файлы для сборки)
-          # Все пути в Dockerfile будут отсчитываться от этой директории
-          push: true  # Флаг публикации образа в реестр после сборки
+          context: ./backend/
+          push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/trion-crm-backend:latest
-          # Тег образа в формате: username/repository:tag
-          # latest - тег по умолчанию для последней версии
-          # ${{ secrets.DOCKER_USERNAME }} - подставляется из секретов GitHub
     
-  # Третья задача: Сборка и публикация Docker-образа gateway
   build_gateway_and_push_to_docker_hub:
     name: Push gateway Docker image to DockerHub
-    # Определяем тип виртуальной машины для выполнения задачи
     runs-on: ubuntu-latest
-    # Зависимость от задачи tests - выполнится только если tests успешна
     needs: tests
     steps:
-      # Шаг 1: Получаем код из репозитория
       - name: Check out the repo
         uses: actions/checkout@v3
-        # Копируем код репозитория в рабочую директорию
       
-      # Шаг 2: Настраиваем Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        # Настраиваем инструмент сборки Docker с расширенными возможностями
       
-      # Шаг 3: Авторизация в Docker Hub
       - name: Login to Docker 
         uses: docker/login-action@v2
         with:
-          # Используем секреты GitHub для безопасного хранения учетных данных
-          username: ${{ secrets.DOCKER_USERNAME }}  # Имя пользователя Docker Hub
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Пароль или токен доступа
-        # Авторизуемся для публикации образов в Docker Hub
-      
-      # Шаг 4: Сборка и публикация Docker-образа gateway
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./gateway/  # Контекст сборки для gateway компонента
-          # Директория, содержащая Dockerfile и файлы для сборки gateway
-          push: true  # Публикуем образ после успешной сборки
+          context: ./gateway/
+          push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/trion-crm-gateway:latest
-          # Тег образа gateway в формате: username/repository:tag
-          # Отдельный образ для gateway (API gateway, nginx, etc.)
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: 
+      - build_backend_and_push_to_docker_hub
+      - build_gateway_and_push_to_docker_hub
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+    - name: Copy docker-compose.yml via ssh
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        source: "docker-compose.production.yml"
+        target: "trion-crm"
+    - name: Executing remote ssh commands to deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        script: |
+          cd trion-crm
+          sudo docker compose -f docker-compose.production.yml pull
+          sudo docker compose -f docker-compose.production.yml up -d --remove-orphans
+          sudo docker compose -f docker-compose.production.yml exec -t backend python manage.py migrate
+          sudo docker compose -f docker-compose.production.yml exec -t backend python manage.py collectstatic --noinput
+
+  send_message:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+    - name: Send message
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        message: |
+          Привет!
+          Администратор только что внёс изменения в CRM-систему.
+          Поздравляем с успешным обновлением!
+          WEB-приложение готово к работе.

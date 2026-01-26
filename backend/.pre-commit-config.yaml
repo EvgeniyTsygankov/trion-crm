@@ -6,3 +6,18 @@ repos:
         language_version: python3.11
         files: ^backend/
         args: ["--config=backend/pyproject.toml"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.11
+    hooks:
+      - id: ruff
+        args: ["--config=backend/pyproject.toml"]
+  
+  - repo: local
+    hooks:
+      - id: pytest-sqlite
+        name: pytest (SQLite, DEBUG=True)
+        entry: python backend/tools/run_pytest_sqlite.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
