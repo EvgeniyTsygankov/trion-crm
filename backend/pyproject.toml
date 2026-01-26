@@ -74,4 +74,4 @@ ignore = [
 # Настраиваем сортировку импортов
 # Указываем локальные модули для Ruff
 [tool.ruff.lint.isort]
-known-first-party = ["api", "crm", "telegram_bot"]
+known-first-party = ["api", "crm", "telegram_bot", "conftest"]
