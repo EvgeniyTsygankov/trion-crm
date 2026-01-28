@@ -10,11 +10,8 @@ from rest_framework import filters, status, viewsets
 from rest_framework.response import Response
 
 from crm.models import Client, Order, Purchase
-from crm.serializers import (
-    ClientSerializer,
-    OrderSerializer,
-    PurchaseSerializer,
-)
+
+from .serializers import ClientSerializer, OrderSerializer, PurchaseSerializer
 
 
 class ClientViewSet(viewsets.ReadOnlyModelViewSet):

@@ -2,8 +2,8 @@
 
 from rest_framework import serializers
 
-from .constants import MONEY_DECIMAL_PLACES, MONEY_MAX_DIGITS
-from .models import (
+from crm.constants import MONEY_DECIMAL_PLACES, MONEY_MAX_DIGITS
+from crm.models import (
     Category,
     Client,
     EntityType,
@@ -14,7 +14,7 @@ from .models import (
     Service,
     ServiceInOrder,
 )
-from .validators import validate_company_for_legal
+from crm.validators import validate_company_for_legal
 
 
 class ClientSerializer(serializers.ModelSerializer):

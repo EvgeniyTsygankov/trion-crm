@@ -19,12 +19,12 @@
 - [`views.py`](views.py) — представления для клиентов, заказов, услуг, покупок и главной страницы.
 - [`urls.py`](urls.py) — маршруты веб‑интерфейса (`/clients/`, `/orders/`, `/purchases/`, `/services/`, `/about/`, `/`).
 - [`forms.py`](forms.py) — `ModelForm` для клиентов, заказов, услуг и покупок.
-- [`serializers.py`](serializers.py) — сериализаторы для read‑only API (используются приложением `api`).
 - [`base_views.py`](base_views.py) — общие базовые классы (List/Create/Update/Detail/Delete).
 - [`mixins.py`](mixins.py), [`labels.py`](labels.py) — миксин для автоматических заголовков форм.
 - [`validators.py`](validators.py) — валидация телефона и бизнес‑правило для юр. лиц.
 - [`constants.py`](constants.py) — константы (длины полей, деньги, пагинация и т.д.).
 - [`admin.py`](admin.py) — настройки административной панели Django.
+- [`label.py`](label.py) — словарь меток моделей в родительном падеже для использования в шаблонах.
 
 ---
 
