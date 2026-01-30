@@ -17,6 +17,7 @@ services:
       - media_volume:/app/media
     depends_on:
       - db
+    restart: unless-stopped
   gateway:
     image: evgeniytsygankov/trion-crm-gateway
     env_file: ./backend/.env
@@ -27,6 +28,7 @@ services:
       - media_volume:/media
     ports:
       - 80:80
+    restart: unless-stopped
   bot:
     image: evgeniytsygankov/trion-crm-backend
     env_file: ./backend/.env
