@@ -109,13 +109,13 @@
                     <td class="text-nowrap">{{ client.total_duty }} ₽</td>
                     <td>
                       <div class="btn-group" role="group" aria-label="Basic outlined example">
-                        <a href="{% url 'client_detail' client.pk %}" class="btn btn-primary" title="Просмотр">
+                        <a href="{% url 'client_detail' client.pk %}" class="btn" title="Просмотр">
                           <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{% url 'client_edit' client.pk %}" class="btn btn-warning" title="Редактировать">
+                        <a href="{% url 'client_edit' client.pk %}" class="btn" title="Редактировать">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'client_delete' client.pk %}" class="btn btn-danger" title="Удалить">
+                        <a href="{% url 'client_delete' client.pk %}" class="btn" title="Удалить">
                           <i class="fas fa-trash"></i>
                         </a>
                       </div>

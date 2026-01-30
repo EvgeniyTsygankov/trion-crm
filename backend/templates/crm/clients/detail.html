@@ -17,6 +17,27 @@
       <p><strong>Долг: </strong>{{ client.total_duty }} ₽</p>
     </div>
   </div>
+  <div class="row justify-content-center mt-3">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="row g-2">
+        <div class="col">
+          <a href="{% url 'client_edit' client.pk %}" class="btn btn-outline-warning w-100">
+            <i class="fas fa-edit"></i> Редактировать
+          </a>
+        </div>
+        <div class="col">
+          <a href="{% url 'client_delete' client.pk %}" class="btn btn-outline-danger w-100">
+            <i class="fas fa-trash"></i> Удалить
+          </a>
+        </div>
+        <div class="col">
+          <a href="{% url 'client_list'%}" class="btn btn-outline-secondary w-100">
+            <i class="fas fa-eye"></i> К списку
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="card mt-4">
     <div class="card-header">
         <h6>Заказы клиента</h6>
@@ -39,6 +60,7 @@
             </p>
             <p>Статус: {{ order.get_status_display }}</p>
           </div>
+
       {% empty %}
           <p>У клиента пока нет заказов</p>
       {% endfor %}
